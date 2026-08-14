@@ -7,11 +7,11 @@
 !Cargo.toml
 !client/**
 !entrypoint.sh
-!healthcheck.sh
 !LICENSE
 !package-lock.json
 !package.json
-!postcss.config.js
+!postcss.config.ts
 !src/**
-!tailwind.config.js
-!vite.config.js
+!tailwind.config.ts
+!tsconfig.json
+!vite.config.ts

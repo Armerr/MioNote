@@ -5,9 +5,10 @@ WORKDIR /build
 COPY .htmlnanorc \
     package.json \
     package-lock.json \
-    postcss.config.js \
-    tailwind.config.js \
-    vite.config.js \
+    postcss.config.ts \
+    tailwind.config.ts \
+    vite.config.ts \
+    tsconfig.json \
     ./
 
 RUN npm ci
