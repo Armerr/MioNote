@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "preserve",
+    "skipLibCheck": true,
+    "strict": false,
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "client/src/**/*.ts",
+    "client/src/**/*.vue",
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "postcss.config.ts",
+    "prettier.config.ts"
+  ]
+}
