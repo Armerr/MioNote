@@ -194,7 +194,10 @@ function highlightMatches(query, caseSensitive = false) {
     offset = haystack.indexOf(needle, offset + needle.length);
   }
   view.dispatch(
-    view.state.tr.setMeta(findHighlightKey, DecorationSet.create(doc, decorations)),
+    view.state.tr.setMeta(
+      findHighlightKey,
+      DecorationSet.create(doc, decorations),
+    ),
   );
 }
 
@@ -211,7 +214,12 @@ function getVisibleText() {
   const editor = getActiveEditor();
   const view = editor?.view;
   if (!view) return "";
-  return view.state.doc.textBetween(0, view.state.doc.content.size, "\n", "\ufffc");
+  return view.state.doc.textBetween(
+    0,
+    view.state.doc.content.size,
+    "\n",
+    "\ufffc",
+  );
 }
 
 // Selects the range given in rendered-text offsets through the ProseMirror
