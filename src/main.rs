@@ -117,9 +117,33 @@ fn build_router(state: AppState) -> Router {
     }
 }
 
-async fn index(State(state): State<AppState>) -> AppResult<Html<String>> {
+async fn index(State(state): State<AppState>) -> AppResult<Response> {
     let html = state.notes.index_html(&state.config.path_prefix).await?;
-    Ok(Html(html))
+    let mut response = Html(html).into_response();
+    response.headers_mut().insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("no-cache"),
+    );
+    Ok(response)
+}
+
+// Vite emits hashed file names like `index-CNBHbjGy.js`; only those can be
+// cached immutably. Everything else must be revalidated so browsers never
+// serve a stale index.html (and with it, stale bundle references).
+fn is_hashed_asset(path: &str) -> bool {
+    let Some(file_name) = path.rsplit('/').next() else {
+        return false;
+    };
+    let Some((stem, _extension)) = file_name.rsplit_once('.') else {
+        return false;
+    };
+    let Some((_, hash)) = stem.rsplit_once('-') else {
+        return false;
+    };
+    hash.len() == 8
+        && hash
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '_')
 }
 
 async fn static_file(State(state): State<AppState>, uri: Uri) -> Response {
@@ -137,6 +161,17 @@ async fn static_file(State(state): State<AppState>, uri: Uri) -> Response {
                 .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream"));
             let mut headers = HeaderMap::new();
             headers.insert(header::CONTENT_TYPE, content_type);
+            if is_hashed_asset(&path) {
+                headers.insert(
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("public, max-age=31536000, immutable"),
+                );
+            } else {
+                headers.insert(
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("no-cache"),
+                );
+            }
             (headers, bytes).into_response()
         }
         Err(_) => {
