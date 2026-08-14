@@ -1,9 +1,14 @@
 <template>
-  <Sheet v-model="open" class="lg:hidden">
+  <Sheet
+    v-model="open"
+    class="inset-0 w-full border-0 bg-theme-canvas shadow-none lg:hidden"
+  >
     <header
-      class="flex items-center justify-between border-b border-theme-border px-5 py-4"
+      class="flex h-16 shrink-0 items-center justify-between border-b border-theme-border px-5"
     >
-      <div class="flex items-center gap-2 text-sm font-semibold">
+      <div
+        class="flex items-center gap-2.5 text-base font-semibold text-theme-text"
+      >
         <span
           class="grid h-8 w-8 place-items-center rounded-md bg-theme-brand-soft text-theme-brand-strong"
         >
@@ -17,19 +22,16 @@
         :aria-label="t('common.close')"
         @click="open = false"
       >
-        <X class="h-4 w-4" />
+        <X class="h-5 w-5" />
       </Button>
     </header>
 
-    <div class="flex items-center justify-between px-5 pb-2 pt-5">
-      <p class="text-[11px] font-semibold uppercase text-theme-text-very-muted">
-        {{ t("sidebar.recent") }}
-      </p>
-      <Button size="sm" @click="createNote"
-        ><Plus class="h-4 w-4" />{{ t("sidebar.newNote") }}</Button
-      >
+    <div class="flex shrink-0 items-center justify-end px-5 pb-1 pt-3">
+      <Button size="sm" @click="createNote">
+        <Plus class="h-4 w-4" />{{ t("sidebar.newNote") }}
+      </Button>
     </div>
-    <NoteList @navigate="open = false" />
+    <NoteList grouped @navigate="open = false" />
   </Sheet>
 </template>
 

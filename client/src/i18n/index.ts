@@ -64,6 +64,12 @@ const messages = {
       noNotes: "还没有笔记",
       newNote: "新建",
       recent: "最近修改",
+      timeGroups: {
+        today: "今天",
+        yesterday: "昨天",
+        week: "最近 7 天",
+        earlier: "更早",
+      },
     },
     home: {
       heading: "开始记录",
@@ -281,6 +287,12 @@ const messages = {
       noNotes: "No notes yet",
       newNote: "New",
       recent: "Recently edited",
+      timeGroups: {
+        today: "Today",
+        yesterday: "Yesterday",
+        week: "Last 7 days",
+        earlier: "Earlier",
+      },
     },
     home: {
       heading: "Start writing",

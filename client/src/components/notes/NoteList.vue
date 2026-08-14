@@ -32,7 +32,51 @@
     </div>
   </Dialog>
 
-  <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-5">
+  <div v-if="grouped" class="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-3">
+    <section
+      v-for="group in groupedNotes"
+      :key="group.id"
+      class="mb-7 last:mb-0"
+    >
+      <h2 class="mb-3 px-1 text-sm font-medium text-theme-text-muted">
+        {{ t(`sidebar.timeGroups.${group.id}`) }}
+      </h2>
+      <div class="space-y-2.5">
+        <RouterLink
+          v-for="note in group.notes"
+          :key="note.title"
+          :to="{ name: 'note', params: { title: note.title } }"
+          class="block rounded-xl border border-transparent bg-theme-background px-4 py-3.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-theme-brand/60"
+          :class="groupedNoteClasses(note)"
+          @click="navigateNote"
+          @contextmenu.prevent="openContextMenu(note, $event)"
+          @pointerdown="startLongPress(note, $event)"
+          @pointerup="cancelLongPress"
+          @pointercancel="cancelLongPress"
+          @pointermove="cancelLongPress"
+        >
+          <p class="line-clamp-2 text-[17px] leading-6 text-theme-text">
+            {{ noteListTitle(note) }}
+          </p>
+          <p
+            v-if="notePreview(note)"
+            class="mt-1 line-clamp-1 text-sm leading-5 text-theme-text-muted"
+          >
+            {{ notePreview(note) }}
+          </p>
+        </RouterLink>
+      </div>
+    </section>
+
+    <p
+      v-if="loaded && notes.length === 0"
+      class="px-1 pt-4 text-sm text-theme-text-very-muted"
+    >
+      {{ t("sidebar.noNotes") }}
+    </p>
+  </div>
+
+  <div v-else class="min-h-0 flex-1 overflow-y-auto px-4 pb-5">
     <RouterLink
       v-for="note in notes"
       :key="note.title"
@@ -121,24 +165,55 @@ import { useToast } from "../../composables/useToast";
 import { defaultNoteTitle } from "../../utils/constants";
 import { useGlobalStore } from "../../stores/globalStore";
 import { getNoteMetadata, setNoteMetadata } from "../../utils/noteMetadata";
+import type { SearchResult } from "../../types/classes";
 
+const props = withDefaults(
+  defineProps<{
+    grouped?: boolean;
+  }>(),
+  {
+    grouped: false,
+  },
+);
 const emit = defineEmits(["navigate"]);
 const { locale, t } = useI18n();
 const globalStore = useGlobalStore();
 const loaded = ref(false);
-const notes = ref([]);
+const notes = ref<SearchResult[]>([]);
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const contextNote = ref();
+const contextNote = ref<SearchResult | null>(null);
 const contextPosition = ref({ x: 16, y: 16 });
 const isContextMenuVisible = ref(false);
 const isDeleteModalVisible = ref(false);
 const isTagDialogVisible = ref(false);
 const tagValue = ref("");
-let longPressTimer;
+let longPressTimer: number | undefined;
 let longPressTriggered = false;
 let noteLoadRequest = 0;
+
+type TimeGroup = "today" | "yesterday" | "week" | "earlier";
+interface GroupedNotes {
+  id: TimeGroup;
+  notes: SearchResult[];
+}
+
+const groupedNotes = computed<GroupedNotes[]>(() => {
+  const groups: Record<TimeGroup, SearchResult[]> = {
+    today: [],
+    yesterday: [],
+    week: [],
+    earlier: [],
+  };
+
+  for (const note of notes.value)
+    groups[timeGroup(note.lastModified)].push(note);
+
+  return (Object.keys(groups) as TimeGroup[])
+    .map((id) => ({ id, notes: groups[id] }))
+    .filter((group) => group.notes.length);
+});
 
 const contextMenuItems = computed(() => {
   const selected = contextNote.value;
@@ -197,12 +272,17 @@ const contextMenuItems = computed(() => {
 async function loadNotes() {
   const request = ++noteLoadRequest;
   try {
-    const loadedNotes = sortNotes(
-      await getNotes("*", "lastModified", "desc", 80),
+    const loadedNotes = await getNotes(
+      "*",
+      "lastModified",
+      "desc",
+      props.grouped ? undefined : 80,
     );
     if (request !== noteLoadRequest) return;
 
-    notes.value = loadedNotes;
+    notes.value = props.grouped
+      ? sortByLastModified(loadedNotes)
+      : sortNotes(loadedNotes);
     hydrateMissingPreviews(loadedNotes, request);
   } catch (error) {
     apiErrorHandler(error, toast);
@@ -211,12 +291,12 @@ async function loadNotes() {
   }
 }
 
-async function hydrateMissingPreviews(items, request) {
+async function hydrateMissingPreviews(items: SearchResult[], request: number) {
   const missing = items.filter((note) => !notePreview(note));
   if (!missing.length) return;
 
   const previews = await Promise.all(
-    missing.map(async (note) => {
+    missing.map(async (note): Promise<[string, string]> => {
       try {
         const fullNote = await getNote(note.title);
         return [note.title, previewFromContent(fullNote.content)];
@@ -275,6 +355,13 @@ function previewFromContent(content) {
     .trim();
 }
 
+function groupedNoteClasses(note: SearchResult) {
+  return (route.name === "note" && route.params.title === note.title) ||
+    (isContextMenuVisible.value && contextNote.value?.title === note.title)
+    ? "border-theme-brand/70 bg-theme-brand-soft"
+    : "hover:border-theme-border hover:bg-theme-background-elevated";
+}
+
 function noteClasses(note) {
   return (route.name === "note" && route.params.title === note.title) ||
     (isContextMenuVisible.value && contextNote.value?.title === note.title)
@@ -296,11 +383,34 @@ function isLocked(note) {
   );
 }
 
-function sortNotes(items = notes.value) {
+function sortNotes(items: SearchResult[] = notes.value) {
   return [...items].sort((left, right) => {
     const pinnedDifference = Number(isPinned(right)) - Number(isPinned(left));
     return pinnedDifference || right.lastModified - left.lastModified;
   });
+}
+
+function sortByLastModified(items: SearchResult[]) {
+  return [...items].sort(
+    (left, right) => right.lastModified - left.lastModified,
+  );
+}
+
+function timeGroup(timestamp: number): TimeGroup {
+  const today = startOfDay(new Date());
+  const noteDay = startOfDay(new Date(timestamp * 1000));
+  const daysAgo = Math.floor(
+    (today.getTime() - noteDay.getTime()) / 86_400_000,
+  );
+
+  if (daysAgo <= 0) return "today";
+  if (daysAgo === 1) return "yesterday";
+  if (daysAgo < 7) return "week";
+  return "earlier";
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function openContextMenu(note, event) {
