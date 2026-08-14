@@ -361,41 +361,28 @@
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
               aria-hidden="true"
             ></span>
-            <div
-              v-if="editorMode === 'markdown'"
-              class="flex items-center gap-0.5"
+            <Button
+              v-if="editorMode === 'markdown' && isMarkdownPreview"
+              variant="ghost"
+              size="icon-sm"
+              class="max-sm:h-9 max-sm:w-9"
+              :title="t('editor.editMarkdown')"
+              :aria-label="t('editor.editMarkdown')"
+              @click="setMarkdownPreview(false)"
             >
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="max-sm:h-9 max-sm:w-9"
-                :class="
-                  isMarkdownPreview
-                    ? 'text-theme-text-muted'
-                    : 'bg-theme-background-elevated text-theme-text'
-                "
-                :title="t('editor.editMarkdown')"
-                :aria-label="t('editor.editMarkdown')"
-                @click="setMarkdownPreview(false)"
-              >
-                <FilePenLine class="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="max-sm:h-9 max-sm:w-9"
-                :class="
-                  isMarkdownPreview
-                    ? 'bg-theme-background-elevated text-theme-text'
-                    : 'text-theme-text-muted'
-                "
-                :title="t('editor.previewMarkdown')"
-                :aria-label="t('editor.previewMarkdown')"
-                @click="setMarkdownPreview(true)"
-              >
-                <Eye class="h-4 w-4" />
-              </Button>
-            </div>
+              <FilePenLine class="h-4 w-4" />
+            </Button>
+            <Button
+              v-else-if="editorMode === 'markdown'"
+              variant="ghost"
+              size="icon-sm"
+              class="max-sm:h-9 max-sm:w-9"
+              :title="t('editor.previewMarkdown')"
+              :aria-label="t('editor.previewMarkdown')"
+              @click="setMarkdownPreview(true)"
+            >
+              <Eye class="h-4 w-4" />
+            </Button>
             <div class="ml-auto shrink-0">
               <NoteMoreMenu :items="moreItems">
                 <template #trigger>
