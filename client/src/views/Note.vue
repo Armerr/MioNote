@@ -285,19 +285,6 @@
       </div>
 
       <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
-        <div class="shrink-0 px-6 pt-4 sm:px-10 sm:pt-6">
-          <input
-            v-model="noteTitleField"
-            type="text"
-            class="w-full bg-transparent text-2xl font-semibold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
-            :placeholder="t('note.title')"
-            @keydown.enter.prevent
-            @input="titleEdited"
-          />
-          <div class="mt-1.5 text-xs text-theme-text-muted">
-            {{ t("note.characterCount", { count: editorCharacterCount }) }}
-          </div>
-        </div>
         <EditorToolbar v-if="!isMarkdownPreview" :editor="toastEditor">
           <template #mobile-controls>
             <Button
@@ -351,6 +338,19 @@
             </div>
           </template>
         </EditorToolbar>
+        <div class="shrink-0 px-6 pt-4 sm:px-10 sm:pt-6">
+          <input
+            v-model="noteTitleField"
+            type="text"
+            class="w-full bg-transparent text-2xl font-semibold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
+            :placeholder="t('note.title')"
+            @keydown.enter.prevent
+            @input="titleEdited"
+          />
+          <div class="mt-1.5 text-xs text-theme-text-muted">
+            {{ t("note.characterCount", { count: editorCharacterCount }) }}
+          </div>
+        </div>
         <div
           v-if="isMarkdownPreview"
           class="min-h-0 flex-1 overflow-y-auto px-4 pb-8 sm:px-8"
