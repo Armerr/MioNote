@@ -338,7 +338,9 @@
             </div>
           </template>
         </EditorToolbar>
-        <div class="shrink-0 px-6 pt-4 sm:px-10 sm:pt-6">
+        <div
+          class="shrink-0 pl-[var(--note-page-margin,1.5rem)] pr-6 pt-4 sm:pr-10 sm:pt-6"
+        >
           <input
             v-model="noteTitleField"
             type="text"
