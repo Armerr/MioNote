@@ -144,7 +144,7 @@
     >
       <div
         class="relative h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 sm:pl-[var(--note-page-margin,1.5rem)] print:hidden"
-        :class="!editMode || isMarkdownPreview ? 'flex' : 'hidden sm:flex'"
+        :class="!editMode ? 'flex' : 'hidden sm:flex'"
       >
         <div class="flex items-center gap-1">
           <Button
@@ -183,19 +183,21 @@
             class="mx-0.5 h-5 w-px bg-theme-border sm:mx-1"
             aria-hidden="true"
           ></span>
-          <label
-            class="hidden items-center gap-1.5 text-xs font-medium text-theme-text-muted sm:flex"
-            :class="{ 'text-theme-brand-strong': editorMode === 'markdown' }"
-          >
-            <span>{{ t("editor.markdown") }}</span>
-            <Switch
-              :model-value="editorMode === 'markdown'"
-              :disabled="!editMode"
-              @update:model-value="
-                (value) => changeEditorMode(value ? 'markdown' : 'wysiwyg')
-              "
-            />
-          </label>
+          <ActionMenu :items="modeMenuItems" align="start">
+            <template #trigger>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="hidden gap-1 px-2 text-xs font-medium sm:inline-flex sm:h-10 sm:w-auto"
+                :title="t('editor.mode')"
+                :aria-label="t('editor.mode')"
+                :disabled="!editMode"
+              >
+                <span>{{ currentEditorModeLabel }}</span>
+                <ChevronDown class="h-3.5 w-3.5" />
+              </Button>
+            </template>
+          </ActionMenu>
         </div>
 
         <div class="flex shrink-0 items-center gap-0.5 pr-1 sm:gap-1">
@@ -234,41 +236,28 @@
             class="mx-1 h-5 w-px shrink-0 bg-theme-border"
             aria-hidden="true"
           ></span>
-          <div
-            v-if="editMode && editorMode === 'markdown'"
-            class="hidden items-center gap-0.5 sm:flex"
+          <Button
+            v-if="editMode && editorMode === 'markdown' && isMarkdownPreview"
+            variant="ghost"
+            size="icon-sm"
+            class="hidden sm:inline-flex sm:h-10 sm:w-10"
+            :title="t('editor.editMarkdown')"
+            :aria-label="t('editor.editMarkdown')"
+            @click="setMarkdownPreview(false)"
           >
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              class="sm:h-10 sm:w-10"
-              :class="
-                isMarkdownPreview
-                  ? 'text-theme-text-muted'
-                  : 'bg-theme-background-elevated text-theme-text'
-              "
-              :title="t('editor.editMarkdown')"
-              :aria-label="t('editor.editMarkdown')"
-              @click="setMarkdownPreview(false)"
-            >
-              <FilePenLine class="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              class="sm:h-10 sm:w-10"
-              :class="
-                isMarkdownPreview
-                  ? 'bg-theme-background-elevated text-theme-text'
-                  : 'text-theme-text-muted'
-              "
-              :title="t('editor.previewMarkdown')"
-              :aria-label="t('editor.previewMarkdown')"
-              @click="setMarkdownPreview(true)"
-            >
-              <Eye class="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          </div>
+            <FilePenLine class="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
+          <Button
+            v-else-if="editMode && editorMode === 'markdown'"
+            variant="ghost"
+            size="icon-sm"
+            class="hidden sm:inline-flex sm:h-10 sm:w-10"
+            :title="t('editor.previewMarkdown')"
+            :aria-label="t('editor.previewMarkdown')"
+            @click="setMarkdownPreview(true)"
+          >
+            <Eye class="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
           <NoteMoreMenu :items="moreItems">
             <template #trigger>
               <Button
@@ -343,19 +332,21 @@
             >
               <Redo2 class="h-4 w-4" />
             </Button>
-            <label
-              class="flex items-center gap-1.5 text-xs font-medium text-theme-text-muted"
-              :class="{ 'text-theme-brand-strong': editorMode === 'markdown' }"
-            >
-              <span>{{ t("editor.markdown") }}</span>
-              <Switch
-                :model-value="editorMode === 'markdown'"
-                :disabled="!editMode"
-                @update:model-value="
-                  (value) => changeEditorMode(value ? 'markdown' : 'wysiwyg')
-                "
-              />
-            </label>
+            <ActionMenu :items="modeMenuItems" align="start">
+              <template #trigger>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="gap-1 px-2 text-xs font-medium"
+                  :title="t('editor.mode')"
+                  :aria-label="t('editor.mode')"
+                  :disabled="!editMode"
+                >
+                  <span>{{ currentEditorModeLabel }}</span>
+                  <ChevronDown class="h-3.5 w-3.5" />
+                </Button>
+              </template>
+            </ActionMenu>
             <span
               v-if="editorMode === 'markdown'"
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
@@ -537,6 +528,7 @@
 <script setup lang="ts">
 import {
   BellRing,
+  ChevronDown,
   ClipboardPaste,
   Copy,
   Download,
@@ -580,6 +572,7 @@ import LoadingIndicator from "../components/common/LoadingIndicator.vue";
 import EditorToolbar from "../components/editor/EditorToolbar.vue";
 import ToastEditor from "../components/editor/ToastEditor.vue";
 import ToastViewer from "../components/editor/ToastViewer.vue";
+import ActionMenu from "../components/ui/ActionMenu.vue";
 import Button from "../components/ui/Button.vue";
 import Dialog from "../components/ui/Dialog.vue";
 import Input from "../components/ui/Input.vue";
@@ -592,8 +585,6 @@ import NoteFindPanel from "../components/notes/NoteFindPanel.vue";
 import NoteContextMenu from "../components/notes/NoteContextMenu.vue";
 import NoteMoreMenu from "../components/notes/NoteMoreMenu.vue";
 import NoteStylePanel from "../components/notes/NoteStylePanel.vue";
-import SegmentedControl from "../components/ui/SegmentedControl.vue";
-import Switch from "../components/ui/Switch.vue";
 import {
   getNoteMetadata,
   removeNoteMetadata,
@@ -612,6 +603,20 @@ const editMode = ref(false);
 const editorMode = ref<EditorMode>(loadDefaultEditorMode());
 const isMarkdownPreview = ref(false);
 const markdownPreviewContent = ref("");
+const currentEditorModeLabel = computed(() =>
+  t(editorMode.value === "markdown" ? "editor.markdown" : "editor.richText"),
+);
+const modeMenuItems = computed(() => [
+  editorMode.value === "markdown"
+    ? {
+        label: t("editor.richText"),
+        command: () => changeEditorMode("wysiwyg"),
+      }
+    : {
+        label: t("editor.markdown"),
+        command: () => changeEditorMode("markdown"),
+      },
+]);
 const editorCharacterCount = ref(0);
 const historyEntries = ref<NoteHistoryEntry[]>([]);
 const globalStore = useGlobalStore();
