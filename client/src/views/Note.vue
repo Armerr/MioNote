@@ -275,10 +275,29 @@
         class="min-h-0 flex-1 overflow-y-auto px-4 pt-5 sm:pt-7"
         @contextmenu.capture="openNoteContextMenu"
       >
+        <h1
+          v-if="note.title"
+          class="text-2xl font-semibold text-theme-text sm:text-3xl"
+        >
+          {{ note.title }}
+        </h1>
         <ToastViewer :initialValue="note.content" class="toast-viewer pb-8" />
       </div>
 
       <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
+        <div class="shrink-0 px-6 pt-4 sm:px-10 sm:pt-6">
+          <input
+            v-model="noteTitleField"
+            type="text"
+            class="w-full bg-transparent text-2xl font-semibold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
+            :placeholder="t('note.title')"
+            @keydown.enter.prevent
+            @input="titleEdited"
+          />
+          <div class="mt-1.5 text-xs text-theme-text-muted">
+            {{ t("note.characterCount", { count: editorCharacterCount }) }}
+          </div>
+        </div>
         <EditorToolbar v-if="!isMarkdownPreview" :editor="toastEditor">
           <template #mobile-controls>
             <Button
@@ -831,6 +850,30 @@ function editorChanged() {
   editorCharacterCount.value = countCharacters(
     toastEditor.value?.getMarkdown() || "",
   );
+  startContentChangedTimeout();
+}
+
+// Inline title field: a brand-new note shows the placeholder instead of the
+// default title; empty input restores the saved title instead of saving "".
+const noteTitleField = computed({
+  get: () =>
+    isNewNote.value && newTitle.value === defaultNoteTitle
+      ? ""
+      : newTitle.value,
+  set: (value: string) => {
+    newTitle.value = value;
+  },
+});
+
+function titleEdited() {
+  const trimmed = newTitle.value.trim();
+  if (!trimmed) {
+    newTitle.value = isNewNote.value
+      ? defaultNoteTitle
+      : note.value.title || defaultNoteTitle;
+    return;
+  }
+  newTitle.value = trimmed;
   startContentChangedTimeout();
 }
 
