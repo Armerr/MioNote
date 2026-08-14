@@ -143,7 +143,7 @@
       :style="editorStyle"
     >
       <div
-        class="relative h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 print:hidden"
+        class="relative h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 sm:pl-[var(--note-page-margin,1.5rem)] print:hidden"
         :class="!editMode || isMarkdownPreview ? 'flex' : 'hidden sm:flex'"
       >
         <div class="flex items-center gap-1">
@@ -471,14 +471,6 @@
 .note-editor-shell .toastui-editor-ww-container .ProseMirror h6,
 .note-editor-shell .toastui-editor-ww-container .ProseMirror li p {
   margin: 0;
-}
-
-@media (max-width: 639px) {
-  .note-editor-shell .toastui-editor-md-container .toastui-editor,
-  .note-editor-shell .toastui-editor-md-container .CodeMirror,
-  .note-editor-shell .toastui-editor-ww-container .ProseMirror {
-    padding: 0.5rem 1rem 1.5rem;
-  }
 }
 </style>
 

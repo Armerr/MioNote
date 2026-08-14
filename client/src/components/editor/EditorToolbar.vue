@@ -1,6 +1,6 @@
 <template>
   <div
-    class="editor-toolbar grid shrink-0 grid-cols-7 gap-x-0.5 gap-y-0.5 border-b border-theme-border bg-theme-canvas px-1.5 py-1 sm:flex sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pl-[var(--note-page-margin,1.5rem)] sm:pr-3"
+    class="editor-toolbar grid shrink-0 grid-cols-7 gap-x-0.5 gap-y-0.5 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 sm:flex sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pr-3"
   >
     <div class="col-span-7 flex min-w-0 items-center gap-0.5 sm:hidden">
       <slot name="mobile-controls" />
