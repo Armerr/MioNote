@@ -28,6 +28,7 @@ const emit = defineEmits(["change", "keydown"]);
 const { locale } = useI18n();
 const editorElement = ref();
 let toastEditor;
+let persistentTextColor = "";
 
 const findHighlightKey = new PluginKey("mionoteFindHighlight");
 // Toast UI plugin entries are factories: (eventEmitter) => PluginInfo for the
@@ -52,11 +53,49 @@ const findHighlightPlugin = () => ({
   markdownPlugins: [findHighlightPmPlugin],
   wysiwygPlugins: [findHighlightPmPlugin],
 });
+const persistentTextColorPmPlugin = () =>
+  new Plugin({
+    appendTransaction(transactions, _, newState) {
+      if (
+        !persistentTextColor ||
+        !transactions.some((transaction) => transaction.docChanged) ||
+        !newState.selection.empty
+      ) {
+        return null;
+      }
+
+      const markType = newState.schema.marks.span;
+      if (!markType) return null;
+
+      const marks = newState.storedMarks ?? newState.selection.$from.marks();
+      const hasPersistentColor = marks.some(
+        (mark) =>
+          mark.type === markType &&
+          parseStyle(mark.attrs.htmlAttrs?.style).color === persistentTextColor,
+      );
+      if (hasPersistentColor) return null;
+
+      return newState.tr.addStoredMark(
+        markType.create({
+          htmlAttrs: {
+            style: serializeStyle({ color: persistentTextColor }),
+          },
+        }),
+      );
+    },
+  });
+const persistentTextColorPlugin = () => ({
+  wysiwygPlugins: [persistentTextColorPmPlugin],
+});
 
 onMounted(() => {
   toastEditor = new Editor({
     ...baseOptions,
-    plugins: [...(baseOptions.plugins || []), findHighlightPlugin],
+    plugins: [
+      ...(baseOptions.plugins || []),
+      findHighlightPlugin,
+      persistentTextColorPlugin,
+    ],
     el: editorElement.value,
     initialValue: props.initialValue,
     initialEditType: props.initialEditType,
@@ -266,16 +305,18 @@ function serializeStyle(style) {
     .join("; ");
 }
 
-function parseStyle(style = "") {
-  return style.split(";").reduce((styles, declaration) => {
-    const separator = declaration.indexOf(":");
-    if (separator === -1) return styles;
+function parseStyle(style = ""): Record<string, string> {
+  return style
+    .split(";")
+    .reduce<Record<string, string>>((styles, declaration) => {
+      const separator = declaration.indexOf(":");
+      if (separator === -1) return styles;
 
-    const property = declaration.slice(0, separator).trim();
-    const value = declaration.slice(separator + 1).trim();
-    if (property && value) styles[property] = value;
-    return styles;
-  }, {});
+      const property = declaration.slice(0, separator).trim();
+      const value = declaration.slice(separator + 1).trim();
+      if (property && value) styles[property] = value;
+      return styles;
+    }, {});
 }
 
 function wrapStyledText(
@@ -326,7 +367,7 @@ function markdownPositionToOffset(markdown, position) {
   return offset + safeColumn - 1;
 }
 
-function applyInlineStyle(tag, style = {}) {
+function applyInlineStyle(tag, style: Record<string, string> = {}) {
   if (!toastEditor) return false;
 
   const attributes = styleAttributes(style);
@@ -350,6 +391,7 @@ function applyInlineStyle(tag, style = {}) {
   const mark = markType.create({
     htmlAttrs: { style: serializeStyle(style) },
   });
+  if (tag === "span" && style.color) persistentTextColor = style.color;
   let transaction = state.tr;
   if (from !== to) transaction = transaction.addMark(from, to, mark);
 
