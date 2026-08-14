@@ -307,14 +307,19 @@
             >
               <Redo2 class="h-4 w-4" />
             </Button>
-            <SegmentedControl
-              compact-on-mobile
-              :model-value="editorMode"
-              :items="editorModeItems"
-              :aria-label="t('editor.mode')"
-              :disabled="!editMode"
-              @update:model-value="changeEditorMode"
-            />
+            <label
+              class="flex items-center gap-1.5 text-xs font-medium text-theme-text-muted"
+              :class="{ 'text-theme-brand-strong': editorMode === 'markdown' }"
+            >
+              <span>{{ t("editor.markdown") }}</span>
+              <Switch
+                :model-value="editorMode === 'markdown'"
+                :disabled="!editMode"
+                @update:model-value="
+                  (value) => changeEditorMode(value ? 'markdown' : 'wysiwyg')
+                "
+              />
+            </label>
             <span
               v-if="editorMode === 'markdown'"
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
