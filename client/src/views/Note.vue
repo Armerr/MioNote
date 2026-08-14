@@ -183,14 +183,19 @@
             class="mx-0.5 h-5 w-px bg-theme-border sm:mx-1"
             aria-hidden="true"
           ></span>
-          <SegmentedControl
-            compact-on-mobile
-            :model-value="editorMode"
-            :items="editorModeItems"
-            :aria-label="t('editor.mode')"
-            :disabled="!editMode"
-            @update:model-value="changeEditorMode"
-          />
+          <label
+            class="hidden items-center gap-1.5 text-xs font-medium text-theme-text-muted sm:flex"
+            :class="{ 'text-theme-brand-strong': editorMode === 'markdown' }"
+          >
+            <span>{{ t("editor.markdown") }}</span>
+            <Switch
+              :model-value="editorMode === 'markdown'"
+              :disabled="!editMode"
+              @update:model-value="
+                (value) => changeEditorMode(value ? 'markdown' : 'wysiwyg')
+              "
+            />
+          </label>
         </div>
 
         <div class="flex shrink-0 items-center gap-0.5 pr-1 sm:gap-1">
@@ -224,15 +229,21 @@
           >
             <SlidersHorizontal class="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
-          <SegmentedControl
+          <span
             v-if="editMode && editorMode === 'markdown'"
-            class="ml-1"
-            compact-on-mobile
-            :model-value="isMarkdownPreview ? 'preview' : 'edit'"
-            :items="markdownViewItems"
-            :aria-label="t('editor.markdownView')"
-            @update:model-value="setMarkdownPreview($event === 'preview')"
-          />
+            class="mx-1 h-5 w-px shrink-0 bg-theme-border"
+            aria-hidden="true"
+          ></span>
+          <label
+            v-if="editMode && editorMode === 'markdown'"
+            class="hidden items-center gap-1.5 text-xs font-medium text-theme-text-muted sm:flex"
+          >
+            <span>{{ t("editor.preview") }}</span>
+            <Switch
+              :model-value="isMarkdownPreview"
+              @update:model-value="setMarkdownPreview"
+            />
+          </label>
           <NoteMoreMenu :items="moreItems">
             <template #trigger>
               <Button
@@ -490,10 +501,8 @@
 import {
   BellRing,
   ClipboardPaste,
-  Code2,
   Copy,
   Download,
-  Eye,
   FileImage,
   FilePenLine,
   FileText,
@@ -508,7 +517,6 @@ import {
   MoreVertical,
   FileType2,
   FileDown,
-  Pilcrow,
   Redo2,
   Scissors,
   SlidersHorizontal,
@@ -566,30 +574,6 @@ const editMode = ref(false);
 const editorMode = ref<EditorMode>(loadDefaultEditorMode());
 const isMarkdownPreview = ref(false);
 const markdownPreviewContent = ref("");
-const editorModeItems = computed(() => [
-  {
-    value: "wysiwyg",
-    label: t("editor.richText"),
-    icon: Pilcrow,
-  },
-  {
-    value: "markdown",
-    label: t("editor.markdown"),
-    icon: Code2,
-  },
-]);
-const markdownViewItems = computed(() => [
-  {
-    value: "edit",
-    label: t("editor.editMarkdown"),
-    icon: FilePenLine,
-  },
-  {
-    value: "preview",
-    label: t("editor.previewMarkdown"),
-    icon: Eye,
-  },
-]);
 const editorCharacterCount = ref(0);
 const historyEntries = ref<NoteHistoryEntry[]>([]);
 const globalStore = useGlobalStore();
