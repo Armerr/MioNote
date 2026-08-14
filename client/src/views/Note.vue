@@ -183,21 +183,40 @@
             class="mx-0.5 h-5 w-px bg-theme-border sm:mx-1"
             aria-hidden="true"
           ></span>
-          <ActionMenu :items="modeMenuItems" align="start">
-            <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="hidden gap-1 px-2 text-xs font-medium sm:inline-flex sm:h-10 sm:w-auto"
-                :title="t('editor.mode')"
-                :aria-label="t('editor.mode')"
-                :disabled="!editMode"
-              >
-                <span>{{ currentEditorModeLabel }}</span>
-                <ChevronDown class="h-3.5 w-3.5" />
-              </Button>
-            </template>
-          </ActionMenu>
+          <div class="hidden items-center gap-0.5 sm:flex">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              class="gap-1 px-2 text-xs font-medium sm:h-10 sm:w-auto"
+              :class="
+                editorMode === 'wysiwyg'
+                  ? 'bg-theme-background-elevated text-theme-text'
+                  : 'text-theme-text-muted'
+              "
+              :title="t('editor.richText')"
+              :aria-label="t('editor.richText')"
+              :disabled="!editMode"
+              @click="changeEditorMode('wysiwyg')"
+            >
+              <span>{{ t("editor.richText") }}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              class="gap-1 px-2 text-xs font-medium sm:h-10 sm:w-auto"
+              :class="
+                editorMode === 'markdown'
+                  ? 'bg-theme-background-elevated text-theme-text'
+                  : 'text-theme-text-muted'
+              "
+              :title="t('editor.markdown')"
+              :aria-label="t('editor.markdown')"
+              :disabled="!editMode"
+              @click="changeEditorMode('markdown')"
+            >
+              <span>{{ t("editor.markdown") }}</span>
+            </Button>
+          </div>
         </div>
 
         <div class="flex shrink-0 items-center gap-0.5 pr-1 sm:gap-1">
@@ -332,21 +351,40 @@
             >
               <Redo2 class="h-4 w-4" />
             </Button>
-            <ActionMenu :items="modeMenuItems" align="start">
-              <template #trigger>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  class="gap-1 px-2 text-xs font-medium"
-                  :title="t('editor.mode')"
-                  :aria-label="t('editor.mode')"
-                  :disabled="!editMode"
-                >
-                  <span>{{ currentEditorModeLabel }}</span>
-                  <ChevronDown class="h-3.5 w-3.5" />
-                </Button>
-              </template>
-            </ActionMenu>
+            <div class="flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="h-9 w-auto px-2 text-xs font-medium"
+                :class="
+                  editorMode === 'wysiwyg'
+                    ? 'bg-theme-background-elevated text-theme-text'
+                    : 'text-theme-text-muted'
+                "
+                :title="t('editor.richText')"
+                :aria-label="t('editor.richText')"
+                :disabled="!editMode"
+                @click="changeEditorMode('wysiwyg')"
+              >
+                {{ t("editor.richText") }}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="h-9 w-auto px-2 text-xs font-medium"
+                :class="
+                  editorMode === 'markdown'
+                    ? 'bg-theme-background-elevated text-theme-text'
+                    : 'text-theme-text-muted'
+                "
+                :title="t('editor.markdown')"
+                :aria-label="t('editor.markdown')"
+                :disabled="!editMode"
+                @click="changeEditorMode('markdown')"
+              >
+                {{ t("editor.markdown") }}
+              </Button>
+            </div>
             <span
               v-if="editorMode === 'markdown'"
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
@@ -528,7 +566,6 @@
 <script setup lang="ts">
 import {
   BellRing,
-  ChevronDown,
   ClipboardPaste,
   Copy,
   Download,
@@ -572,7 +609,6 @@ import LoadingIndicator from "../components/common/LoadingIndicator.vue";
 import EditorToolbar from "../components/editor/EditorToolbar.vue";
 import ToastEditor from "../components/editor/ToastEditor.vue";
 import ToastViewer from "../components/editor/ToastViewer.vue";
-import ActionMenu from "../components/ui/ActionMenu.vue";
 import Button from "../components/ui/Button.vue";
 import Dialog from "../components/ui/Dialog.vue";
 import Input from "../components/ui/Input.vue";
@@ -603,20 +639,6 @@ const editMode = ref(false);
 const editorMode = ref<EditorMode>(loadDefaultEditorMode());
 const isMarkdownPreview = ref(false);
 const markdownPreviewContent = ref("");
-const currentEditorModeLabel = computed(() =>
-  t(editorMode.value === "markdown" ? "editor.markdown" : "editor.richText"),
-);
-const modeMenuItems = computed(() => [
-  editorMode.value === "markdown"
-    ? {
-        label: t("editor.richText"),
-        command: () => changeEditorMode("wysiwyg"),
-      }
-    : {
-        label: t("editor.markdown"),
-        command: () => changeEditorMode("markdown"),
-      },
-]);
 const editorCharacterCount = ref(0);
 const historyEntries = ref<NoteHistoryEntry[]>([]);
 const globalStore = useGlobalStore();
