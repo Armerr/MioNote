@@ -118,7 +118,6 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="max-sm:hidden"
             :title="t('editor.fontColor')"
             :aria-label="t('editor.fontColor')"
             @pointerdown.capture="saveTextColorSelection"
