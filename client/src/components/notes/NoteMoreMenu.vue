@@ -7,7 +7,7 @@
       <DropdownMenuContent
         align="end"
         :side-offset="10"
-        class="z-50 w-[min(18rem,calc(100vw-1rem))] origin-top rounded-xl border border-theme-border bg-theme-canvas p-2 text-theme-text shadow-2xl outline-none data-[state=closed]:animate-[mionote-pop-out_110ms_ease-in] data-[state=open]:animate-[mionote-pop-in_160ms_cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none dark:bg-theme-background-elevated"
+        class="z-50 w-[min(14rem,calc(100vw-1rem))] origin-top rounded-xl border border-theme-border bg-theme-canvas p-1.5 text-theme-text shadow-2xl outline-none data-[state=closed]:animate-[mionote-pop-out_110ms_ease-in] data-[state=open]:animate-[mionote-pop-in_160ms_cubic-bezier(0.16,1,0.3,1)] motion-reduce:animate-none sm:w-[min(18rem,calc(100vw-1rem))] sm:p-2 dark:bg-theme-background-elevated"
       >
         <template
           v-for="(item, index) in items"
@@ -15,39 +15,41 @@
         >
           <DropdownMenuSeparator
             v-if="item.separator"
-            class="my-2 h-px bg-theme-border"
+            class="my-1.5 h-px bg-theme-border sm:my-2"
             :class="item.mobileOnly ? 'sm:hidden' : ''"
           />
           <DropdownMenuSub v-else-if="item.children?.length">
             <DropdownMenuSubTrigger
               :disabled="item.disabled"
-              class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-3 text-base text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45 sm:text-[17px]"
+              class="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45 sm:min-h-12 sm:gap-3 sm:rounded-lg sm:px-3 sm:text-[17px]"
               :class="item.mobileOnly ? 'sm:hidden' : ''"
             >
               <component
                 :is="item.icon"
                 v-if="item.icon"
-                class="h-5 w-5 shrink-0"
+                class="h-[1.125rem] w-[1.125rem] shrink-0 sm:h-5 sm:w-5"
               />
               <span class="flex-1">{{ item.label }}</span>
-              <ChevronRight class="h-5 w-5 text-theme-text-very-muted" />
+              <ChevronRight
+                class="h-[1.125rem] w-[1.125rem] text-theme-text-very-muted sm:h-5 sm:w-5"
+              />
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent
-                class="z-50 min-w-48 origin-left rounded-xl border border-theme-border bg-theme-canvas p-2 text-theme-text shadow-2xl outline-none data-[state=closed]:animate-[mionote-pop-out_100ms_ease-in] data-[state=open]:animate-[mionote-pop-in_140ms_cubic-bezier(0.16,1,0.3,1)] dark:bg-theme-background-elevated"
+                class="z-50 min-w-40 origin-left rounded-xl border border-theme-border bg-theme-canvas p-1.5 text-theme-text shadow-2xl outline-none data-[state=closed]:animate-[mionote-pop-out_100ms_ease-in] data-[state=open]:animate-[mionote-pop-in_140ms_cubic-bezier(0.16,1,0.3,1)] sm:min-w-48 sm:p-2 dark:bg-theme-background-elevated"
                 :side-offset="8"
               >
                 <DropdownMenuItem
                   v-for="child in item.children"
                   :key="child.label"
                   :disabled="child.disabled"
-                  class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-[17px] text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45"
+                  class="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45 sm:min-h-11 sm:gap-3 sm:rounded-lg sm:px-3 sm:text-[17px]"
                   @select="run(child)"
                 >
                   <component
                     :is="child.icon"
                     v-if="child.icon"
-                    class="h-5 w-5 shrink-0"
+                    class="h-[1.125rem] w-[1.125rem] shrink-0 sm:h-5 sm:w-5"
                   />
                   <span>{{ child.label }}</span>
                 </DropdownMenuItem>
@@ -57,7 +59,7 @@
           <DropdownMenuItem
             v-else
             :disabled="item.disabled"
-            class="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg px-3 text-base text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45 sm:text-[17px]"
+            class="flex min-h-10 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm text-theme-text outline-none transition-colors data-[disabled]:pointer-events-none data-[highlighted]:bg-theme-background-elevated data-[disabled]:opacity-45 sm:min-h-12 sm:gap-3 sm:rounded-lg sm:px-3 sm:text-[17px]"
             :class="[
               item.danger
                 ? 'text-theme-danger data-[highlighted]:bg-theme-danger/10'
@@ -69,12 +71,12 @@
             <component
               :is="item.icon"
               v-if="item.icon"
-              class="h-5 w-5 shrink-0"
+              class="h-[1.125rem] w-[1.125rem] shrink-0 sm:h-5 sm:w-5"
             />
             <span class="flex-1">{{ item.label }}</span>
             <ChevronRight
               v-if="item.chevron"
-              class="h-5 w-5 text-theme-text-very-muted"
+              class="h-[1.125rem] w-[1.125rem] text-theme-text-very-muted sm:h-5 sm:w-5"
             />
           </DropdownMenuItem>
         </template>
