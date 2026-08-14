@@ -4,7 +4,7 @@
     :model-value="modelValue"
     :disabled="disabled"
     :aria-label="ariaLabel"
-    class="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md border border-theme-border bg-theme-background-elevated p-0.5 text-xs font-medium shadow-sm"
+    class="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md border border-theme-border bg-theme-background-elevated p-0.5 text-xs font-medium shadow-sm max-sm:rounded-full"
     @update:model-value="handleUpdate"
   >
     <ToggleGroupItem
@@ -12,14 +12,18 @@
       :key="item.value"
       :value="item.value"
       :disabled="item.disabled"
-      class="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded px-2 text-theme-text-muted outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 data-[state=on]:bg-theme-canvas data-[state=on]:text-theme-text data-[state=on]:shadow-sm"
+      class="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded px-2 text-theme-text-muted outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 data-[state=on]:bg-theme-canvas data-[state=on]:text-theme-text data-[state=on]:shadow-sm max-sm:data-[state=on]:bg-theme-brand max-sm:data-[state=on]:text-white max-sm:data-[state=on]:shadow-none"
       :class="
         compactOnMobile ? 'max-sm:w-7 max-sm:justify-center max-sm:px-0' : ''
       "
       :title="item.title || item.label"
       :aria-label="item.ariaLabel || item.label"
     >
-      <component v-if="item.icon" :is="item.icon" class="h-3.5 w-3.5" />
+      <component
+        v-if="item.icon"
+        :is="item.icon"
+        class="h-3.5 w-3.5 max-sm:h-4 max-sm:w-4"
+      />
       <span :class="compactOnMobile ? 'max-sm:sr-only' : ''">{{
         item.label
       }}</span>

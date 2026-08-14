@@ -315,6 +315,11 @@
               :disabled="!editMode"
               @update:model-value="changeEditorMode"
             />
+            <span
+              v-if="editorMode === 'markdown'"
+              class="mx-1 h-4 w-px shrink-0 bg-theme-border"
+              aria-hidden="true"
+            ></span>
             <SegmentedControl
               v-if="editorMode === 'markdown'"
               compact-on-mobile
