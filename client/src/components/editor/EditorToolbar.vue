@@ -114,6 +114,7 @@
           <Button
             variant="ghost"
             size="icon-sm"
+            class="max-sm:hidden"
             :title="t('editor.fontColor')"
             :aria-label="t('editor.fontColor')"
             @pointerdown.capture="saveTextColorSelection"
@@ -155,7 +156,9 @@
       class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
     ></div>
 
-    <div class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5">
+    <div
+      class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
+    >
       <Button
         variant="ghost"
         size="icon-sm"
@@ -215,7 +218,9 @@
       class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
     ></div>
 
-    <div class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5">
+    <div
+      class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
+    >
       <Button
         variant="ghost"
         size="icon-sm"
@@ -498,17 +503,15 @@ function insertTable() {
 </script>
 
 <style scoped>
-.editor-toolbar {
-  grid-template-rows: repeat(3, 2.25rem);
-}
-
 @media (max-width: 639px) {
   .editor-toolbar {
     gap: 0;
     padding-block: 0.125rem;
   }
 
-  .editor-toolbar :deep(button) {
+  /* Only the toolbar's own icon buttons get the touch-friendly height;
+     exclude controls like Switch that size themselves. */
+  .editor-toolbar :deep(button:not([role="switch"])) {
     height: 2.25rem;
     min-height: 2.25rem;
   }
