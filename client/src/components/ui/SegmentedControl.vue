@@ -12,7 +12,7 @@
       :key="item.value"
       :value="item.value"
       :disabled="item.disabled"
-      class="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded px-2 text-theme-text-muted outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 data-[state=on]:bg-theme-canvas data-[state=on]:text-theme-text data-[state=on]:shadow-sm max-sm:data-[state=on]:bg-theme-brand max-sm:data-[state=on]:text-white max-sm:data-[state=on]:shadow-none"
+      class="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded px-2 text-theme-text-muted outline-none transition-[background-color,color,box-shadow,transform] duration-150 hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 data-[state=on]:bg-theme-canvas data-[state=on]:text-theme-text data-[state=on]:shadow-sm max-sm:data-[state=on]:bg-theme-brand/10 max-sm:data-[state=on]:text-theme-brand-strong max-sm:data-[state=on]:shadow-none"
       :class="
         compactOnMobile ? 'max-sm:w-7 max-sm:justify-center max-sm:px-0' : ''
       "

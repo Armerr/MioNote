@@ -320,14 +320,16 @@
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
               aria-hidden="true"
             ></span>
-            <SegmentedControl
+            <label
               v-if="editorMode === 'markdown'"
-              compact-on-mobile
-              :model-value="isMarkdownPreview ? 'preview' : 'edit'"
-              :items="markdownViewItems"
-              :aria-label="t('editor.markdownView')"
-              @update:model-value="setMarkdownPreview($event === 'preview')"
-            />
+              class="flex items-center gap-1.5 text-xs font-medium text-theme-text-muted"
+            >
+              <span>{{ t("editor.preview") }}</span>
+              <Switch
+                :model-value="isMarkdownPreview"
+                @update:model-value="setMarkdownPreview"
+              />
+            </label>
             <div class="ml-auto shrink-0">
               <NoteMoreMenu :items="moreItems">
                 <template #trigger>
@@ -540,6 +542,7 @@ import NoteContextMenu from "../components/notes/NoteContextMenu.vue";
 import NoteMoreMenu from "../components/notes/NoteMoreMenu.vue";
 import NoteStylePanel from "../components/notes/NoteStylePanel.vue";
 import SegmentedControl from "../components/ui/SegmentedControl.vue";
+import Switch from "../components/ui/Switch.vue";
 import {
   getNoteMetadata,
   removeNoteMetadata,
