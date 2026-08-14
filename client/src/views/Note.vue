@@ -296,7 +296,7 @@
       </div>
 
       <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
-        <EditorToolbar v-if="!isMarkdownPreview" :editor="toastEditor">
+        <EditorToolbar :editor="toastEditor" :previewing="isMarkdownPreview">
           <template #mobile-controls>
             <Button
               variant="ghost"

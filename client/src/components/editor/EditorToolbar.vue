@@ -1,11 +1,15 @@
 <template>
   <div
     class="editor-toolbar grid shrink-0 grid-cols-7 gap-x-0.5 gap-y-0.5 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 sm:flex sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pr-3"
+    :class="props.previewing ? 'sm:hidden' : ''"
   >
     <div class="col-span-7 flex min-w-0 items-center gap-0.5 sm:hidden">
       <slot name="mobile-controls" />
     </div>
-    <div class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5">
+    <div
+      v-if="!props.previewing"
+      class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
+    >
       <ActionMenu :items="headingItems" align="start">
         <template #trigger>
           <Button
@@ -153,10 +157,12 @@
     </div>
 
     <div
+      v-if="!props.previewing"
       class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
     ></div>
 
     <div
+      v-if="!props.previewing"
       class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
     >
       <Button
@@ -215,10 +221,12 @@
     </div>
 
     <div
+      v-if="!props.previewing"
       class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
     ></div>
 
     <div
+      v-if="!props.previewing"
       class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
     >
       <Button
@@ -332,9 +340,11 @@ import type { EditorSelectionStyle, ToastEditorHandle } from "../../types";
 const props = withDefaults(
   defineProps<{
     editor?: ToastEditorHandle | null;
+    previewing?: boolean;
   }>(),
   {
     editor: null,
+    previewing: false,
   },
 );
 
