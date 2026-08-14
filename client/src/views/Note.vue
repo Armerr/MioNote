@@ -234,16 +234,41 @@
             class="mx-1 h-5 w-px shrink-0 bg-theme-border"
             aria-hidden="true"
           ></span>
-          <label
+          <div
             v-if="editMode && editorMode === 'markdown'"
-            class="hidden items-center gap-1.5 text-xs font-medium text-theme-text-muted sm:flex"
+            class="hidden items-center gap-0.5 sm:flex"
           >
-            <span>{{ t("editor.preview") }}</span>
-            <Switch
-              :model-value="isMarkdownPreview"
-              @update:model-value="setMarkdownPreview"
-            />
-          </label>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              class="sm:h-10 sm:w-10"
+              :class="
+                isMarkdownPreview
+                  ? 'text-theme-text-muted'
+                  : 'bg-theme-background-elevated text-theme-text'
+              "
+              :title="t('editor.editMarkdown')"
+              :aria-label="t('editor.editMarkdown')"
+              @click="setMarkdownPreview(false)"
+            >
+              <FilePenLine class="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              class="sm:h-10 sm:w-10"
+              :class="
+                isMarkdownPreview
+                  ? 'bg-theme-background-elevated text-theme-text'
+                  : 'text-theme-text-muted'
+              "
+              :title="t('editor.previewMarkdown')"
+              :aria-label="t('editor.previewMarkdown')"
+              @click="setMarkdownPreview(true)"
+            >
+              <Eye class="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+          </div>
           <NoteMoreMenu :items="moreItems">
             <template #trigger>
               <Button
@@ -336,16 +361,41 @@
               class="mx-1 h-4 w-px shrink-0 bg-theme-border"
               aria-hidden="true"
             ></span>
-            <label
+            <div
               v-if="editorMode === 'markdown'"
-              class="flex items-center gap-1.5 text-xs font-medium text-theme-text-muted"
+              class="flex items-center gap-0.5"
             >
-              <span>{{ t("editor.preview") }}</span>
-              <Switch
-                :model-value="isMarkdownPreview"
-                @update:model-value="setMarkdownPreview"
-              />
-            </label>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="max-sm:h-9 max-sm:w-9"
+                :class="
+                  isMarkdownPreview
+                    ? 'text-theme-text-muted'
+                    : 'bg-theme-background-elevated text-theme-text'
+                "
+                :title="t('editor.editMarkdown')"
+                :aria-label="t('editor.editMarkdown')"
+                @click="setMarkdownPreview(false)"
+              >
+                <FilePenLine class="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                class="max-sm:h-9 max-sm:w-9"
+                :class="
+                  isMarkdownPreview
+                    ? 'bg-theme-background-elevated text-theme-text'
+                    : 'text-theme-text-muted'
+                "
+                :title="t('editor.previewMarkdown')"
+                :aria-label="t('editor.previewMarkdown')"
+                @click="setMarkdownPreview(true)"
+              >
+                <Eye class="h-4 w-4" />
+              </Button>
+            </div>
             <div class="ml-auto shrink-0">
               <NoteMoreMenu :items="moreItems">
                 <template #trigger>
@@ -503,6 +553,7 @@ import {
   ClipboardPaste,
   Copy,
   Download,
+  Eye,
   FileImage,
   FilePenLine,
   FileText,
