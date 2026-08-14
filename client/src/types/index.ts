@@ -98,6 +98,7 @@ export interface ToastEditorHandle {
   applyCopiedStyle: (style: EditorSelectionStyle) => boolean;
   applyInlineStyle: (tag: string, style?: Record<string, string>) => boolean;
   changeMode: (mode: EditorMode) => void;
+  clearMatches: () => void;
   deleteSelection: () => void;
   exec: (command: string, payload?: unknown) => void;
   focus: () => void;
@@ -106,9 +107,12 @@ export interface ToastEditorHandle {
   getSelectedText: () => string;
   getSelection: () => EditorSelection | undefined;
   getSelectionStyle: () => EditorSelectionStyle | null;
+  getVisibleText: () => string;
+  highlightMatches: (query: string, caseSensitive?: boolean) => void;
   insertText: (text: string) => void;
   isWysiwygMode: () => boolean;
   replaceSelection: (text: string) => void;
+  selectRange: (from: number, to: number) => void;
   setMarkdown: (markdown: string) => void;
   setSelection: (start: number, end: number) => void;
 }

@@ -1199,6 +1199,7 @@ function findInNote({
   const match = getFindMatch(query, caseSensitive, backwards, reset);
   if (!match) {
     findMatchCount.value = { current: 0, total: 0 };
+    toastEditor.value?.clearMatches();
     if (query)
       toast.add(
         getToastOptions(t("note.noMatches"), t("common.error"), "error"),
@@ -1210,6 +1211,7 @@ function findInNote({
     current: activeFindIndex + 1,
     total: match.matches.length,
   };
+  toastEditor.value?.highlightMatches(query, caseSensitive);
   if (focusEditor) {
     selectFindMatch(query, caseSensitive, match.matches[activeFindIndex]);
   }
@@ -1299,64 +1301,26 @@ function findMatchOffsets(source, needle) {
 }
 
 function selectFindMatch(query, caseSensitive, markdownOffset) {
-  if (!toastEditor.value || !editMode.value) return;
-  toastEditor.value.focus();
+  const editor = toastEditor.value;
+  if (!editor || !editMode.value) return;
 
-  if (!toastEditor.value.isWysiwygMode()) {
-    toastEditor.value.setSelection(
-      markdownOffset,
-      markdownOffset + query.length,
-    );
-    return;
-  }
-
-  const editorRoot = workspaceElement.value?.querySelector(".ProseMirror");
-  const visibleText = editorRoot?.textContent || "";
+  const visibleText = editor.getVisibleText() || "";
   const source = caseSensitive ? visibleText : visibleText.toLocaleLowerCase();
   const needle = caseSensitive ? query : query.toLocaleLowerCase();
   const occurrence = findMatchOffsets(
     caseSensitive
-      ? toastEditor.value.getMarkdown() || ""
-      : (toastEditor.value.getMarkdown() || "").toLocaleLowerCase(),
+      ? editor.getMarkdown() || ""
+      : (editor.getMarkdown() || "").toLocaleLowerCase(),
     needle,
   ).findIndex((offset) => offset === markdownOffset);
   const visibleOffsets = findMatchOffsets(source, needle);
   const visibleOffset =
     visibleOffsets[Math.max(0, occurrence)] ?? visibleOffsets[0];
-  if (visibleOffset == null || !editorRoot) return;
+  if (visibleOffset == null) return;
 
-  const walker = document.createTreeWalker(editorRoot, NodeFilter.SHOW_TEXT);
-  let node;
-  let passed = 0;
-  let startNode;
-  let startOffset = 0;
-  let endNode;
-  let endOffset = 0;
-  while ((node = walker.nextNode())) {
-    const end = passed + node.textContent.length;
-    if (!startNode && visibleOffset >= passed && visibleOffset <= end) {
-      startNode = node;
-      startOffset = visibleOffset - passed;
-    }
-    const targetEnd = visibleOffset + query.length;
-    if (targetEnd >= passed && targetEnd <= end) {
-      endNode = node;
-      endOffset = targetEnd - passed;
-      break;
-    }
-    passed = end;
-  }
-  if (!startNode || !endNode) return;
-  const range = document.createRange();
-  range.setStart(startNode, startOffset);
-  range.setEnd(endNode, endOffset);
-  const selection = window.getSelection();
-  selection?.removeAllRanges();
-  selection?.addRange(range);
-  startNode.parentElement?.scrollIntoView({
-    block: "center",
-    behavior: "smooth",
-  });
+  // Select through the ProseMirror state so the selection survives editor
+  // redraws; both mode containers share the same rendered-text mapping.
+  editor.selectRange(visibleOffset, visibleOffset + query.length);
 }
 
 // Note Deletion

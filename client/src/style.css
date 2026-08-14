@@ -179,6 +179,13 @@
   }
 }
 
+/* Page-local find: decorations applied to every match in the editor. */
+.mionote-find-match {
+  background-color: rgb(250 204 21 / 0.42);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(250 204 21 / 0.3);
+}
+
 @layer utilities {
   .mionote-panel-enter-active,
   .mionote-panel-leave-active {

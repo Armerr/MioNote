@@ -6,7 +6,8 @@
 import Editor from "@toast-ui/editor";
 import "@toast-ui/editor/dist/i18n/zh-cn";
 import { DOMParser } from "prosemirror-model";
-import { TextSelection } from "prosemirror-state";
+import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
+import { Decoration, DecorationSet } from "prosemirror-view";
 import { onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
@@ -28,9 +29,34 @@ const { locale } = useI18n();
 const editorElement = ref();
 let toastEditor;
 
+const findHighlightKey = new PluginKey("mionoteFindHighlight");
+// Toast UI plugin entries are factories: (eventEmitter) => PluginInfo for the
+// top-level plugin and (eventEmitter) => Plugin for the per-mode PM plugins.
+const findHighlightPmPlugin = () =>
+  new Plugin({
+    key: findHighlightKey,
+    state: {
+      init: () => DecorationSet.empty,
+      apply(tr, value) {
+        const meta = tr.getMeta(findHighlightKey);
+        return meta != null ? meta : value.map(tr.mapping, tr.doc);
+      },
+    },
+    props: {
+      decorations(state) {
+        return findHighlightKey.getState(state);
+      },
+    },
+  });
+const findHighlightPlugin = () => ({
+  markdownPlugins: [findHighlightPmPlugin],
+  wysiwygPlugins: [findHighlightPmPlugin],
+});
+
 onMounted(() => {
   toastEditor = new Editor({
     ...baseOptions,
+    plugins: [...(baseOptions.plugins || []), findHighlightPlugin],
     el: editorElement.value,
     initialValue: props.initialValue,
     initialEditType: props.initialEditType,
@@ -111,6 +137,99 @@ function setSelection(start, end) {
 
 function getSelection() {
   return toastEditor?.getSelection?.();
+}
+
+// Maps a plain-text offset (as produced by doc.textBetween) back to a
+// document position, accounting for the "\n" separators inserted between
+// text blocks. Returns null when the offset falls outside the text range.
+function textOffsetToDocPos(doc, target) {
+  let found = null;
+  let accumulated = 0;
+  let firstBlock = true;
+  doc.descendants((node, nodePos) => {
+    if (found != null) return false;
+    if (node.isText) {
+      const next = accumulated + node.text.length;
+      if (target >= accumulated && target <= next) {
+        found = nodePos + (target - accumulated);
+        return false;
+      }
+      accumulated = next;
+      firstBlock = false;
+    } else if (node.isTextblock) {
+      if (!firstBlock) accumulated += 1;
+    }
+    return true;
+  });
+  return found;
+}
+
+// Highlights every occurrence of the query in the active editor with an
+// inline decoration, or clears the decorations when the query is empty.
+function highlightMatches(query, caseSensitive = false) {
+  const editor = getActiveEditor();
+  const view = editor?.view;
+  if (!view) return;
+  if (!query) {
+    clearMatches();
+    return;
+  }
+
+  const doc = view.state.doc;
+  const text = doc.textBetween(0, doc.content.size, "\n", "\ufffc");
+  const haystack = caseSensitive ? text : text.toLocaleLowerCase();
+  const needle = caseSensitive ? query : query.toLocaleLowerCase();
+  const decorations = [];
+  let offset = haystack.indexOf(needle);
+  let guard = 0;
+  while (offset >= 0 && guard < 1000) {
+    guard += 1;
+    const from = textOffsetToDocPos(doc, offset);
+    const to = textOffsetToDocPos(doc, offset + needle.length);
+    if (from != null && to != null && to > from) {
+      decorations.push(
+        Decoration.inline(from, to, { class: "mionote-find-match" }),
+      );
+    }
+    offset = haystack.indexOf(needle, offset + needle.length);
+  }
+  view.dispatch(
+    view.state.tr.setMeta(findHighlightKey, DecorationSet.create(doc, decorations)),
+  );
+}
+
+function clearMatches() {
+  const editor = getActiveEditor();
+  const view = editor?.view;
+  if (!view) return;
+  view.dispatch(view.state.tr.setMeta(findHighlightKey, DecorationSet.empty));
+}
+
+// Returns the rendered (markdown-free) text of the active editor, as used by
+// the page-local find mapping.
+function getVisibleText() {
+  const editor = getActiveEditor();
+  const view = editor?.view;
+  if (!view) return "";
+  return view.state.doc.textBetween(0, view.state.doc.content.size, "\n", "\ufffc");
+}
+
+// Selects the range given in rendered-text offsets through the ProseMirror
+// state, so the selection survives editor redraws and focus changes.
+function selectRange(from, to) {
+  const editor = getActiveEditor();
+  const view = editor?.view;
+  if (!view) return;
+  const doc = view.state.doc;
+  const fromPos = textOffsetToDocPos(doc, from);
+  const toPos = textOffsetToDocPos(doc, to);
+  if (fromPos == null || toPos == null || toPos <= fromPos) return;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(doc, fromPos, toPos))
+      .scrollIntoView(),
+  );
+  toastEditor?.focus();
 }
 
 function changeMode(mode) {
@@ -450,6 +569,7 @@ defineExpose({
   applyCopiedStyle,
   applyInlineStyle,
   changeMode,
+  clearMatches,
   deleteSelection,
   exec,
   focus,
@@ -458,9 +578,12 @@ defineExpose({
   getSelection,
   getSelectedText,
   getSelectionStyle,
+  getVisibleText,
+  highlightMatches,
   insertText,
   isWysiwygMode,
   replaceSelection,
+  selectRange,
   setMarkdown,
   setSelection,
 });

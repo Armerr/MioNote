@@ -6,6 +6,20 @@
       <slot name="mobile-controls" />
     </div>
     <div class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5">
+      <ActionMenu :items="headingItems" align="start">
+        <template #trigger>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            :title="t('editor.heading')"
+            :aria-label="t('editor.heading')"
+            class="gap-0.5 px-1.5 sm:w-auto"
+          >
+            <Heading1 class="h-4 w-4" />
+            <ChevronDown class="h-3.5 w-3.5" />
+          </Button>
+        </template>
+      </ActionMenu>
       <ActionMenu :items="fontSizeItems" align="start">
         <template #trigger>
           <Button
@@ -282,6 +296,7 @@ import {
   AlignRight,
   Bold,
   ChevronDown,
+  Heading1,
   Highlighter,
   ImagePlus,
   Italic,
@@ -368,6 +383,14 @@ const textColorSwatches = [
   "#db2777",
   "#ffffff",
 ];
+
+const headingItems = computed(() => [
+  { label: t("editor.paragraph"), command: () => run("paragraph") },
+  ...[1, 2, 3, 4, 5, 6].map((level) => ({
+    label: t("editor.headingLevel", { level }),
+    command: () => run("heading", { level }),
+  })),
+]);
 
 const fontSizeItems = computed(() =>
   [12, 14, 16, 18, 20, 24, 28, 32].map((size) => ({
