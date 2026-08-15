@@ -206,7 +206,10 @@ mod tests {
         )
         .expect("tag should match");
         assert_eq!(result.tag_matches, Some(vec!["rust".to_string()]));
-        assert_eq!(result.preview, Some("Rich text writes Markdown.".to_string()));
+        assert_eq!(
+            result.preview,
+            Some("Rich text writes Markdown.".to_string())
+        );
         assert_eq!(
             result.content_highlights,
             Some("#<span class=\"match\">rust</span>".to_string())

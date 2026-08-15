@@ -132,6 +132,7 @@ cython_debug/
 
 # Local MioNote runtime data
 /.local-dev-data/
+/dev-data/
 /tmp/
 
 # Local agent workspace files

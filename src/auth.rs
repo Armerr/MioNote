@@ -47,6 +47,7 @@ impl AuthService {
             return Err(AppError::Unauthorized("当前未开放注册。".to_string()));
         }
         let account = self.accounts.register(data)?;
+        crate::log_write("account_registered", account.id);
         self.issue_token(&account)
     }
 

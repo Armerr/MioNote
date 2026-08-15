@@ -1,6 +1,8 @@
 <template>
+  <MobileNoteList class="h-full lg:hidden" />
+
   <div
-    class="flex h-full min-h-[420px] items-center justify-center px-5 py-8 sm:px-0 sm:py-0"
+    class="hidden h-full min-h-[420px] items-center justify-center px-5 py-8 lg:flex"
   >
     <div class="max-w-md text-center">
       <div
@@ -24,6 +26,7 @@ import { NotebookPen, Plus } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
+import MobileNoteList from "../components/layout/MobileNoteList.vue";
 import Button from "../components/ui/Button.vue";
 
 const { t } = useI18n();

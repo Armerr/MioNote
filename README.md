@@ -90,6 +90,8 @@ docker compose up -d
 | `MIONOTE_SESSION_EXPIRY_DAYS` | `30`                   | 登录会话有效期，单位为天。                      |
 | `MIONOTE_PATH_PREFIX`         | 空                     | 反向代理子路径，例如 `/notes`。                 |
 
+服务日志默认输出 `INFO` 级别的启动、请求结果和写入事件到标准输出；可通过 `RUST_LOG` 使用 `tracing` 过滤规则调整级别，例如 `RUST_LOG=debug`。日志不会记录认证凭据、令牌、笔记内容或动态路由参数。
+
 ## 子路径部署
 
 当应用由反向代理暴露在 `https://example.com/notes` 时，设置：

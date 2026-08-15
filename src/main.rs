@@ -7,20 +7,7 @@ mod models;
 mod notes;
 mod search;
 
-use std::sync::Arc;
-
-use axum::{
-    extract::{DefaultBodyLimit, Multipart, Path, Query, State},
-    http::{header, HeaderMap, HeaderValue, StatusCode, Uri},
-    response::{Html, IntoResponse, Response},
-    routing::{get, post},
-    Json, Router,
-};
-use serde::Deserialize;
-use serde_json::json;
-use tokio::net::TcpListener;
-use tower_http::{limit::RequestBodyLimitLayer, trace::TraceLayer};
-use tracing::info;
+use std::{sync::Arc, time::Duration};
 
 use crate::{
     accounts::AccountStore,
@@ -34,6 +21,19 @@ use crate::{
     },
     notes::NoteStore,
 };
+use axum::{
+    extract::{DefaultBodyLimit, MatchedPath, Multipart, Path, Query, State},
+    http::{header, HeaderMap, HeaderValue, StatusCode, Uri},
+    response::{Html, IntoResponse, Response},
+    routing::{get, post},
+    Json, Router,
+};
+use serde::Deserialize;
+use serde_json::json;
+use tokio::net::TcpListener;
+use tower_http::{limit::RequestBodyLimitLayer, trace::TraceLayer};
+use tracing::{info, Span};
+use tracing_subscriber::EnvFilter;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -53,7 +53,9 @@ pub struct SearchQuery {
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
+    let log_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
     tracing_subscriber::fmt()
+        .with_env_filter(log_filter)
         .with_target(false)
         .compact()
         .init();
@@ -108,8 +110,24 @@ fn build_router(state: AppState) -> Router {
         .with_state(state.clone())
         .layer(DefaultBodyLimit::max(25 * 1024 * 1024))
         .layer(RequestBodyLimitLayer::new(25 * 1024 * 1024))
-        .layer(TraceLayer::new_for_http());
-
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<_>| {
+                    let route = request
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str);
+                    tracing::info_span!(
+                        "http_request",
+                        method = %request.method(),
+                        route = %request_log_path(route),
+                        status = tracing::field::Empty,
+                        latency_ms = tracing::field::Empty,
+                    )
+                })
+                .on_request(())
+                .on_response(log_response),
+        );
     if state.config.path_prefix.is_empty() {
         api
     } else {
@@ -117,13 +135,26 @@ fn build_router(state: AppState) -> Router {
     }
 }
 
+fn log_response<B>(response: &axum::http::Response<B>, latency: Duration, span: &Span) {
+    span.record("status", response.status().as_u16());
+    span.record("latency_ms", latency.as_millis() as u64);
+    info!(parent: span, "request completed");
+}
+
+fn request_log_path(matched_path: Option<&str>) -> &str {
+    matched_path.unwrap_or("unmatched")
+}
+
+pub(crate) fn log_write(action: &'static str, user_id: i64) {
+    info!(action = %action, user_id, "write completed");
+}
+
 async fn index(State(state): State<AppState>) -> AppResult<Response> {
     let html = state.notes.index_html(&state.config.path_prefix).await?;
     let mut response = Html(html).into_response();
-    response.headers_mut().insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("no-cache"),
-    );
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     Ok(response)
 }
 
@@ -167,10 +198,7 @@ async fn static_file(State(state): State<AppState>, uri: Uri) -> Response {
                     HeaderValue::from_static("public, max-age=31536000, immutable"),
                 );
             } else {
-                headers.insert(
-                    header::CACHE_CONTROL,
-                    HeaderValue::from_static("no-cache"),
-                );
+                headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
             }
             (headers, bytes).into_response()
         }
@@ -259,9 +287,10 @@ async fn create_note(
     Json(note): Json<NoteCreate>,
 ) -> AppResult<Json<Note>> {
     let user = state.auth.require(&headers)?;
-    Ok(Json(state.notes.create(user.id, note).await?))
+    let note = state.notes.create(user.id, note).await?;
+    log_write("note_created", user.id);
+    Ok(Json(note))
 }
-
 async fn update_note(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -269,7 +298,9 @@ async fn update_note(
     Json(data): Json<NoteUpdate>,
 ) -> AppResult<Json<Note>> {
     let user = state.auth.require(&headers)?;
-    Ok(Json(state.notes.update(user.id, &title, data).await?))
+    let note = state.notes.update(user.id, &title, data).await?;
+    log_write("note_updated", user.id);
+    Ok(Json(note))
 }
 
 async fn delete_note(
@@ -279,6 +310,7 @@ async fn delete_note(
 ) -> AppResult<StatusCode> {
     let user = state.auth.require(&headers)?;
     state.notes.delete(user.id, &title).await?;
+    log_write("note_deleted", user.id);
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -305,9 +337,10 @@ async fn upload_attachment(
     multipart: Multipart,
 ) -> AppResult<Json<AttachmentResponse>> {
     let user = state.auth.require(&headers)?;
-    Ok(Json(state.attachments.create(user.id, multipart).await?))
+    let attachment = state.attachments.create(user.id, multipart).await?;
+    log_write("attachment_uploaded", user.id);
+    Ok(Json(attachment))
 }
-
 async fn get_attachment(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -315,4 +348,112 @@ async fn get_attachment(
 ) -> AppResult<Response> {
     let user = state.auth.require(&headers)?;
     state.attachments.get(user.id, &filename).await
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        io::{self, Write},
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
+
+    use axum::http::Response as HttpResponse;
+    use tracing::{dispatcher, Dispatch};
+
+    use super::*;
+
+    #[derive(Clone)]
+    struct TestWriter(Arc<Mutex<Vec<u8>>>);
+
+    impl Write for TestWriter {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            match self.0.lock() {
+                Ok(mut output) => output.write(buffer),
+                Err(_) => Err(io::Error::other("test writer lock poisoned")),
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            match self.0.lock() {
+                Ok(mut output) => output.flush(),
+                Err(_) => Err(io::Error::other("test writer lock poisoned")),
+            }
+        }
+    }
+
+    #[test]
+    fn logs_request_method_uri_status_and_latency_to_stdout() {
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let writer = TestWriter(output.clone());
+        let subscriber = tracing_subscriber::fmt()
+            .without_time()
+            .with_ansi(false)
+            .with_target(false)
+            .with_writer(move || writer.clone())
+            .finish();
+        let dispatch = Dispatch::new(subscriber);
+
+        dispatcher::with_default(&dispatch, || {
+            let span = tracing::info_span!(
+                "http_request",
+                method = %"GET",
+                route = %"/health",
+                status = tracing::field::Empty,
+                latency_ms = tracing::field::Empty,
+            );
+            log_response(
+                &HttpResponse::builder()
+                    .status(StatusCode::OK)
+                    .body(())
+                    .unwrap(),
+                Duration::from_millis(12),
+                &span,
+            );
+        });
+
+        let output = match output.lock() {
+            Ok(output) => String::from_utf8(output.clone()).unwrap(),
+            Err(_) => panic!("test writer lock poisoned"),
+        };
+        assert!(output.contains("request completed"));
+        assert!(output.contains("method=GET"));
+        assert!(output.contains("route=/health"));
+        assert!(output.contains("status=200"));
+        assert!(output.contains("latency_ms=12"));
+    }
+
+    #[test]
+    fn request_log_path_uses_route_template_and_hides_unmatched_paths() {
+        assert_eq!(
+            request_log_path(Some("/api/notes/{title}")),
+            "/api/notes/{title}"
+        );
+        assert_eq!(request_log_path(None), "unmatched");
+    }
+
+    #[test]
+    fn logs_write_action_without_sensitive_payload() {
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let writer = TestWriter(output.clone());
+        let subscriber = tracing_subscriber::fmt()
+            .without_time()
+            .with_ansi(false)
+            .with_target(false)
+            .with_writer(move || writer.clone())
+            .finish();
+        let dispatch = Dispatch::new(subscriber);
+
+        dispatcher::with_default(&dispatch, || log_write("note_created", 42));
+
+        let output = match output.lock() {
+            Ok(output) => String::from_utf8(output.clone()).unwrap(),
+            Err(_) => panic!("test writer lock poisoned"),
+        };
+        assert!(output.contains("write completed"));
+        assert!(output.contains("action=note_created"));
+        assert!(output.contains("user_id=42"));
+        assert!(!output.contains("password"));
+        assert!(!output.contains("content"));
+    }
 }

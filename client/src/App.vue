@@ -5,15 +5,14 @@
   >
     <Toaster />
     <template v-if="showWorkspace">
-      <SearchModal v-model="isSearchModalVisible" />
-      <MobileNoteSheet v-model="isNoteSheetVisible" />
+      <MobileNoteSheet ref="mobileNoteSheet" v-model="isNoteSheetVisible" />
       <NavBar />
       <div class="flex min-h-0 flex-1">
         <div
           class="hidden shrink-0 lg:flex"
           :style="{ width: `${sidebarWidth}px` }"
         >
-          <NoteSidebar @open-search="toggleSearchModal" />
+          <NoteSidebar ref="noteSidebar" />
         </div>
         <button
           class="hidden w-2 shrink-0 cursor-col-resize items-stretch border-x border-transparent bg-transparent transition-colors hover:border-theme-brand/30 hover:bg-theme-brand/10 focus-visible:border-theme-brand/60 focus-visible:bg-theme-brand/10 lg:flex"
@@ -29,15 +28,11 @@
           @keydown.right.prevent="resizeSidebarBy(16)"
         ></button>
         <main
-          class="xl:px-9 min-w-0 flex-1 overflow-y-auto bg-theme-canvas pb-[calc(76px+env(safe-area-inset-bottom))] sm:px-8 sm:pb-24 sm:pt-7 lg:px-8 lg:py-6"
+          class="xl:px-9 min-w-0 flex-1 overflow-y-auto bg-theme-canvas pb-0 sm:px-8 sm:pb-24 sm:pt-7 lg:px-8 lg:py-6"
         >
-          <RouterView />
+          <RouterView @open-search="focusWorkspaceSearch" />
         </main>
       </div>
-      <MobileBottomBar
-        @open-notes="isNoteSheetVisible = true"
-        @open-search="toggleSearchModal"
-      />
     </template>
     <RouterView v-else />
   </LoadingIndicator>
@@ -46,26 +41,25 @@
 <script setup>
 import Mousetrap from "mousetrap";
 import "mousetrap/plugins/global-bind/mousetrap-global-bind";
-import { computed, onBeforeUnmount, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { RouterView, useRoute } from "vue-router";
 
 import { apiErrorHandler, getConfig, getCurrentUser } from "./api";
+import LoadingIndicator from "./components/common/LoadingIndicator.vue";
+import MobileNoteSheet from "./components/layout/MobileNoteSheet.vue";
+import NavBar from "./components/layout/NavBar.vue";
+import NoteSidebar from "./components/layout/NoteSidebar.vue";
 import Toaster from "./components/ui/Toaster.vue";
 import { useToast } from "./composables/useToast";
+import router from "./router";
 import { useGlobalStore } from "./stores/globalStore";
 import { loadTheme } from "./utils/helpers";
-import NavBar from "./components/layout/NavBar.vue";
-import MobileBottomBar from "./components/layout/MobileBottomBar.vue";
-import MobileNoteSheet from "./components/layout/MobileNoteSheet.vue";
-import NoteSidebar from "./components/layout/NoteSidebar.vue";
-import SearchModal from "./components/search/SearchModal.vue";
-import LoadingIndicator from "./components/common/LoadingIndicator.vue";
-import router from "./router";
 
 const globalStore = useGlobalStore();
 const { t } = useI18n();
-const isSearchModalVisible = ref(false);
+const mobileNoteSheet = ref();
+const noteSidebar = ref();
 const isNoteSheetVisible = ref(false);
 const SIDEBAR_MIN_WIDTH = 280;
 const SIDEBAR_MAX_WIDTH = 560;
@@ -79,7 +73,7 @@ const toast = useToast();
 // '/' to search
 Mousetrap.bind("/", () => {
   if (route.name !== "login") {
-    toggleSearchModal();
+    focusWorkspaceSearch();
     return false;
   }
 });
@@ -122,8 +116,15 @@ const showWorkspace = computed(() => {
   return route.name !== "login";
 });
 
-function toggleSearchModal() {
-  isSearchModalVisible.value = !isSearchModalVisible.value;
+async function focusWorkspaceSearch() {
+  if (window.matchMedia("(min-width: 1024px)").matches) {
+    noteSidebar.value?.focusSearch();
+    return;
+  }
+
+  isNoteSheetVisible.value = true;
+  await nextTick();
+  mobileNoteSheet.value?.focusSearch();
 }
 
 function loadSidebarWidth() {

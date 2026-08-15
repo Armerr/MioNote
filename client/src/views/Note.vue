@@ -18,8 +18,8 @@
     confirmButtonStyle="success"
     :rejectButtonText="t('common.discard')"
     rejectButtonStyle="danger"
-    @confirm="saveHandler(true)"
-    @reject="closeNote"
+    @confirm="savePendingCloseAction"
+    @reject="discardPendingCloseAction"
   />
 
   <!-- Draft Modal -->
@@ -139,7 +139,7 @@
   >
     <section
       ref="workspaceElement"
-      class="flex min-h-0 flex-1 flex-col bg-theme-canvas"
+      class="flex min-h-0 flex-1 flex-col bg-theme-canvas pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-0"
       :style="editorStyle"
     >
       <div
@@ -147,6 +147,16 @@
         :class="!editMode ? 'flex' : 'hidden sm:flex'"
       >
         <div class="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            class="sm:hidden"
+            :title="t('nav.allNotes')"
+            :aria-label="t('nav.allNotes')"
+            @click="returnToNotes"
+          >
+            <ArrowLeft class="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -331,6 +341,15 @@
       <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
         <EditorToolbar :editor="toastEditor" :previewing="isMarkdownPreview">
           <template #mobile-controls>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              :title="t('nav.allNotes')"
+              :aria-label="t('nav.allNotes')"
+              @click="returnToNotes"
+            >
+              <ArrowLeft class="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -565,6 +584,7 @@
 
 <script setup lang="ts">
 import {
+  ArrowLeft,
   BellRing,
   ClipboardPaste,
   Copy,
@@ -586,6 +606,7 @@ import {
   FileDown,
   Redo2,
   Scissors,
+  Search,
   SlidersHorizontal,
   Trash2,
   Undo2,
@@ -630,6 +651,10 @@ import type { EditorMode, NoteHistoryEntry, ToastEditorHandle } from "../types";
 
 const props = defineProps<{ title?: string }>();
 
+type CloseAction = "edit" | "notes";
+
+const emit = defineEmits<{ (event: "open-search"): void }>();
+
 const { locale, t } = useI18n();
 const canModify = computed(() => true);
 let contentChangedTimeout: number | null = null;
@@ -648,6 +673,7 @@ let activeFindKey = "";
 let activeFindIndex = -1;
 const isHistoryDialogVisible = ref(false);
 const isSaveChangesModalVisible = ref(false);
+const pendingCloseAction = ref<CloseAction | null>(null);
 const isDeleteModalVisible = ref(false);
 const isDraftModalVisible = ref(false);
 const isInfoDialogVisible = ref(false);
@@ -717,6 +743,12 @@ const editorContextItems = computed(() => {
   ];
 });
 const moreItems = computed(() => [
+  {
+    label: t("nav.search"),
+    icon: Search,
+    mobileOnly: true,
+    command: () => emit("open-search"),
+  },
   {
     label: t("note.find"),
     icon: FileSearch,
@@ -1441,7 +1473,7 @@ function deleteConfirmedHandler() {
 }
 
 // Note Saving
-function saveHandler(close = false) {
+function saveHandler(closeAction: CloseAction | null = null) {
   // Invalid Character Validation
   if (reservedFilenameCharacters.test(newTitle.value)) {
     badFilenameToast(t("note.title"));
@@ -1449,15 +1481,15 @@ function saveHandler(close = false) {
   }
 
   // Save Note
-  let newContent = toastEditor.value.getMarkdown();
+  const newContent = toastEditor.value.getMarkdown();
   if (isNewNote.value) {
-    saveNew(newTitle.value, newContent, close);
+    saveNew(newTitle.value, newContent, closeAction);
   } else {
-    saveExisting(newTitle.value, newContent, close);
+    saveExisting(newTitle.value, newContent, closeAction);
   }
 }
 
-function saveNew(newTitle, newContent, close = false) {
+function saveNew(newTitle, newContent, closeAction: CloseAction | null = null) {
   createNote(newTitle, newContent)
     .then((data) => {
       clearDraft();
@@ -1472,16 +1504,20 @@ function saveNew(newTitle, newContent, close = false) {
         .then(() => {
           // Wait for the route to be updated before setting edit mode to false
           // as the route is used to determine the action.
-          noteSaveSuccess(close);
+          noteSaveSuccess(closeAction);
         });
     })
     .catch(noteSaveFailure);
 }
 
-function saveExisting(newTitle, newContent, close = false) {
+function saveExisting(
+  newTitle,
+  newContent,
+  closeAction: CloseAction | null = null,
+) {
   // Return if no changes
   if (newTitle == note.value.title && newContent == note.value.content) {
-    noteSaveSuccess(close);
+    noteSaveSuccess(closeAction);
     return;
   }
 
@@ -1492,7 +1528,7 @@ function saveExisting(newTitle, newContent, close = false) {
       recordHistory(data);
       notifyNotesChanged();
       router.replace({ name: "note", params: { title: note.value.title } });
-      noteSaveSuccess(close);
+      noteSaveSuccess(closeAction);
     })
     .catch(noteSaveFailure);
 }
@@ -1507,10 +1543,10 @@ function noteSaveFailure(error) {
   }
 }
 
-function noteSaveSuccess(close = false) {
+function noteSaveSuccess(closeAction: CloseAction | null = null) {
   unsavedChanges.value = false;
-  if (close) {
-    closeNote();
+  if (closeAction) {
+    executeCloseAction(closeAction);
   }
   setBeforeUnloadConfirmation(false);
   toast.add(getToastOptions(t("note.saved"), t("common.success"), "success"));
@@ -1579,20 +1615,37 @@ function autoSaveHandler() {
 
 // Note Closure
 function closeHandler() {
-  if (isContentChanged()) {
-    isSaveChangesModalVisible.value = true;
-  } else {
-    closeNote();
-  }
+  requestClose("edit");
 }
 
-function closeNote() {
+function returnToNotes() {
+  requestClose("notes");
+}
+
+function requestClose(action: CloseAction) {
+  if (editMode.value && isContentChanged()) {
+    pendingCloseAction.value = action;
+    isSaveChangesModalVisible.value = true;
+    return;
+  }
+
+  executeCloseAction(action);
+}
+
+function savePendingCloseAction() {
+  saveHandler(pendingCloseAction.value ?? "edit");
+}
+
+function discardPendingCloseAction() {
+  executeCloseAction(pendingCloseAction.value ?? "edit");
+}
+
+function executeCloseAction(action: CloseAction) {
+  pendingCloseAction.value = null;
   clearDraft();
   editMode.value = false;
-  if (isNewNote.value) {
+  if (action === "notes" || isNewNote.value) {
     router.push({ name: "home" });
-  } else {
-    editMode.value = false;
   }
 }
 
@@ -1732,7 +1785,7 @@ Mousetrap.bind("e", () => {
 function keydownHandler(event: KeyboardEvent) {
   // Ctrl + Enter to save
   if ((event.ctrlKey || event.metaKey) && event.key == "Enter") {
-    saveHandler(false);
+    saveHandler();
   }
   // Escape to exit edit mode
   if (event.key == "Escape") {
@@ -1790,7 +1843,7 @@ function loadDefaultEditorMode(): EditorMode {
 function isContentChanged() {
   return (
     (newTitle.value || defaultNoteTitle) != note.value.title ||
-    toastEditor.value.getMarkdown() != note.value.content
+    (toastEditor.value?.getMarkdown() || "") != note.value.content
   );
 }
 
