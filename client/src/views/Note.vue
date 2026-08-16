@@ -473,7 +473,7 @@
         </div>
         <div
           v-show="!isMarkdownPreview"
-          class="min-h-0 flex-1"
+          class="min-h-0 flex-1 pb-[calc(3.25rem+env(safe-area-inset-bottom))] sm:pb-0"
           @contextmenu.capture="openNoteContextMenu"
         >
           <ToastEditor

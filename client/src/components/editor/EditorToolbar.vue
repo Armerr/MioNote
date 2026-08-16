@@ -1,14 +1,14 @@
 <template>
   <div
-    class="editor-toolbar grid shrink-0 grid-cols-7 gap-x-0.5 gap-y-0.5 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 sm:flex sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pr-3"
+    class="editor-toolbar flex shrink-0 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pr-3"
     :class="props.previewing ? 'sm:hidden' : ''"
   >
-    <div class="col-span-7 flex min-w-0 items-center gap-0.5 sm:hidden">
+    <div class="flex min-w-0 flex-1 items-center gap-0.5 sm:hidden">
       <slot name="mobile-controls" />
     </div>
     <div
       v-if="!props.previewing"
-      class="contents sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
+      class="mobile-format-toolbar fixed inset-x-0 bottom-0 z-40 grid h-[calc(3.25rem+env(safe-area-inset-bottom))] grid-cols-8 items-start border-t border-theme-border bg-theme-canvas/95 px-1 pt-1 shadow-[0_-8px_24px_rgb(38_38_35/0.06)] backdrop-blur sm:contents"
     >
       <ActionMenu :items="headingItems" align="start">
         <template #trigger>
@@ -88,7 +88,12 @@
           </Button>
         </PopoverTrigger>
         <PopoverPortal>
-          <PopoverContent class="color-palette" align="start" :side-offset="8">
+          <PopoverContent
+            class="color-palette"
+            align="start"
+            :side="colorPaletteSide"
+            :side-offset="8"
+          >
             <div class="grid grid-cols-5 gap-1.5">
               <button
                 v-for="color in highlightSwatches"
@@ -127,7 +132,12 @@
           </Button>
         </PopoverTrigger>
         <PopoverPortal>
-          <PopoverContent class="color-palette" align="start" :side-offset="8">
+          <PopoverContent
+            class="color-palette"
+            align="start"
+            :side="colorPaletteSide"
+            :side-offset="8"
+          >
             <div class="grid grid-cols-5 gap-1.5">
               <button
                 v-for="color in textColorSwatches"
@@ -321,7 +331,7 @@ import {
   Table2,
   Underline,
 } from "lucide-vue-next";
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   PopoverContent,
@@ -361,6 +371,10 @@ const customHighlightColor = ref("#fef08a");
 const customTextColor = ref("#2563eb");
 const selectedTextColor = ref("#111827");
 const textColorSelection = ref<[number, number] | null>(null);
+const isCompactViewport = ref(false);
+const colorPaletteSide = computed(() =>
+  isCompactViewport.value ? "top" : "bottom",
+);
 
 const highlightSwatches = [
   "#fef3c7",
@@ -436,6 +450,10 @@ const alignmentItems = computed(() => [
   },
 ]);
 
+function syncCompactViewport() {
+  isCompactViewport.value = window.matchMedia("(max-width: 639px)").matches;
+}
+
 function run(command: string, payload?: unknown) {
   props.editor?.exec(command, payload);
 }
@@ -509,6 +527,15 @@ function insertTable() {
   });
   tableDialogOpen.value = false;
 }
+
+onMounted(() => {
+  syncCompactViewport();
+  window.addEventListener("resize", syncCompactViewport);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", syncCompactViewport);
+});
 </script>
 
 <style scoped>
@@ -518,11 +545,26 @@ function insertTable() {
     padding-block: 0.125rem;
   }
 
-  /* Only the toolbar's own icon buttons get the touch-friendly height;
-     exclude controls like Switch that size themselves. */
   .editor-toolbar :deep(button:not([role="switch"])) {
     height: 2.25rem;
     min-height: 2.25rem;
+  }
+
+  .mobile-format-toolbar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobile-format-toolbar :deep([data-reka-dropdown-menu-trigger]),
+  .mobile-format-toolbar :deep([data-slot="popover-trigger"]) {
+    min-width: 0;
+  }
+
+  .mobile-format-toolbar :deep(button:not([role="switch"])) {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    width: 100%;
+    min-width: 0;
+    padding-inline: 0.125rem;
   }
 }
 

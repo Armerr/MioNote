@@ -134,6 +134,7 @@ cython_debug/
 /.local-dev-data/
 /dev-data/
 /tmp/
+/.superpowers/
 
 # Local agent workspace files
 /task_plan.md
