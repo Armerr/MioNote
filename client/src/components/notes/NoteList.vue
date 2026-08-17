@@ -2,7 +2,7 @@
   <ConfirmModal
     v-model="isDeleteModalVisible"
     :title="t('note.deleteTitle')"
-    :message="t('note.deleteMessage', { title: contextNote?.title || '' })"
+    :message="t('note.deleteMessage', { title: noteDisplayTitle(contextNote?.title || '') })"
     :confirmButtonText="t('common.delete')"
     confirmButtonStyle="danger"
     @confirm="deleteContextNote"
@@ -106,7 +106,7 @@
         />
       </div>
       <p
-        v-if="note.title !== defaultNoteTitle && notePreview(note)"
+        v-if="!isUntitledNoteTitle(note.title) && notePreview(note)"
         class="leading-4.5 mt-0.5 block w-full truncate text-sm text-theme-text-muted"
         :title="notePreview(note)"
       >
@@ -162,7 +162,10 @@ import Button from "../ui/Button.vue";
 import Dialog from "../ui/Dialog.vue";
 import Input from "../ui/Input.vue";
 import { useToast } from "../../composables/useToast";
-import { defaultNoteTitle } from "../../utils/constants";
+import {
+  defaultNoteTitle,
+  isUntitledNoteTitle,
+} from "../../utils/constants";
 import { useGlobalStore } from "../../stores/globalStore";
 import { getNoteMetadata, setNoteMetadata } from "../../utils/noteMetadata";
 import type { SearchResult } from "../../types/classes";
@@ -342,8 +345,12 @@ function notePreview(note) {
 }
 
 function noteListTitle(note) {
-  if (note.title !== defaultNoteTitle) return note.title;
+  if (!isUntitledNoteTitle(note.title)) return note.title;
   return notePreview(note) || defaultNoteTitle;
+}
+
+function noteDisplayTitle(title: string) {
+  return isUntitledNoteTitle(title) ? defaultNoteTitle : title;
 }
 
 function previewFromContent(content) {

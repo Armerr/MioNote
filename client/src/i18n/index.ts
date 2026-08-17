@@ -103,6 +103,8 @@ const messages = {
       emptyTitle: "笔记标题不能为空。",
       setTitle: "设置列表标题",
       duplicate: "已有同名笔记，请使用其他标题。",
+      emptyUntitledDuplicate:
+        "已有一篇空白无标题笔记，点击“新建笔记”即可继续编辑。",
       uploading: "正在上传附件…",
       attachmentUploaded: "附件已上传",
       tooLarge: "{entity}过大，请缩小后重试或调整服务器限制。",
@@ -326,6 +328,8 @@ const messages = {
       setTitle: "Set list title",
       duplicate:
         "A note with this title already exists. Use a different title.",
+      emptyUntitledDuplicate:
+        "An empty untitled note already exists. Choose “New note” to continue editing it.",
       uploading: "Uploading attachment…",
       attachmentUploaded: "Attachment uploaded",
       tooLarge:

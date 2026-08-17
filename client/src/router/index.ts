@@ -68,7 +68,12 @@ router.afterEach((to) => {
   let title = "MioNote";
   if (to.name === "note") {
     if (to.params.title) {
-      title = `${to.params.title} - ${title}`;
+      const noteTitle = String(to.params.title);
+      title = `${
+        constants.isUntitledNoteTitle(noteTitle)
+          ? constants.defaultNoteTitle
+          : noteTitle
+      } - ${title}`;
     } else {
       title = `${i18n.global.t("nav.newNote")} - ${title}`;
     }

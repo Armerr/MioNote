@@ -19,5 +19,11 @@ export const authTypes = {
   totp: "totp",
 };
 
-// The sole untitled note is stored under this canonical filename.
+// Untitled notes use the canonical name when available, or a hidden unique
+// filename when another untitled note already occupies it.
 export const defaultNoteTitle = "新建笔记";
+export const untitledTitlePrefix = ".mionote-untitled-";
+
+export function isUntitledNoteTitle(title: string) {
+  return title === defaultNoteTitle || title.startsWith(untitledTitlePrefix);
+}

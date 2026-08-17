@@ -3,7 +3,7 @@
   <ConfirmModal
     v-model="isDeleteModalVisible"
     :title="t('note.deleteTitle')"
-    :message="t('note.deleteMessage', { title: note.title })"
+    :message="t('note.deleteMessage', { title: displayNoteTitle(note.title) })"
     :confirmButtonText="t('common.delete')"
     confirmButtonStyle="danger"
     @confirm="deleteConfirmedHandler"
@@ -98,7 +98,7 @@
         >
           <span class="min-w-0">
             <span class="block truncate text-sm font-medium">{{
-              entry.title || t("note.titlePlaceholder")
+              displayNoteTitle(entry.title) || t("note.titlePlaceholder")
             }}</span>
             <span class="mt-0.5 block text-xs text-theme-text-muted">{{
               formatSavedAt(entry.savedAt)
@@ -332,7 +332,7 @@
           v-if="note.title"
           class="text-2xl font-semibold text-theme-text sm:text-3xl"
         >
-          {{ note.title }}
+          {{ displayNoteTitle(note.title) }}
         </h1>
         <ToastViewer :initialValue="note.content" class="toast-viewer pb-8" />
       </div>
@@ -454,7 +454,6 @@
             class="w-full bg-transparent text-2xl font-semibold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
             :placeholder="t('note.title')"
             @keydown.enter.prevent
-            @input="titleEdited"
           />
           <div class="mt-1.5 text-xs text-theme-text-muted">
             {{ t("note.characterCount", { count: editorCharacterCount }) }}
@@ -633,7 +632,10 @@ import Button from "../components/ui/Button.vue";
 import Dialog from "../components/ui/Dialog.vue";
 import Input from "../components/ui/Input.vue";
 import { useToast } from "../composables/useToast";
-import { defaultNoteTitle } from "../utils/constants";
+import {
+  defaultNoteTitle,
+  isUntitledNoteTitle,
+} from "../utils/constants";
 import { useGlobalStore } from "../stores/globalStore";
 import { getToastOptions } from "../utils/helpers";
 import { isCurrentTokenStored } from "../api/tokenStorage";
@@ -819,8 +821,15 @@ function init() {
   if (props.title && props.title == note.value.title) {
     return;
   }
-  if (!props.title && note.value.title === defaultNoteTitle && editMode.value) {
-    router.replace({ name: "note", params: { title: defaultNoteTitle } });
+  const currentContent =
+    toastEditor.value?.getMarkdown() ?? note.value.content;
+  if (
+    !props.title &&
+    isUntitledNoteTitle(note.value.title) &&
+    editMode.value &&
+    !currentContent
+  ) {
+    router.replace({ name: "note", params: { title: note.value.title } });
     return;
   }
 
@@ -860,23 +869,32 @@ function openDefaultNote() {
     loadingIndicator.value?.setFailed();
     apiErrorHandler(error, toast);
   };
+  const createUntitledNote = () => {
+    createNote(defaultNoteTitle, "")
+      .then(open)
+      .catch((createError) => {
+        if (createError.response?.status === 409) {
+          getNote(defaultNoteTitle).then(open).catch(fail);
+        } else {
+          fail(createError);
+        }
+      });
+  };
 
   getNote(defaultNoteTitle)
-    .then(open)
+    .then((data) => {
+      if (data.content) {
+        createUntitledNote();
+      } else {
+        open(data);
+      }
+    })
     .catch((error) => {
       if (error.response?.status !== 404) {
         fail(error);
         return;
       }
-      createNote(defaultNoteTitle, "")
-        .then(open)
-        .catch((createError) => {
-          if (createError.response?.status === 409) {
-            getNote(defaultNoteTitle).then(open).catch(fail);
-          } else {
-            fail(createError);
-          }
-        });
+      createUntitledNote();
     });
 }
 
@@ -919,7 +937,9 @@ function editHandler() {
 
 function setEditMode() {
   const draft = loadDraft();
-  newTitle.value = draft?.title || note.value.title || defaultNoteTitle;
+  const draftTitle = typeof draft?.title === "string" ? draft.title : null;
+  newTitle.value =
+    draftTitle ?? editableTitleForStorageTitle(note.value.title);
   editorCharacterCount.value = countCharacters(
     draft?.content || note.value.content,
   );
@@ -940,28 +960,37 @@ function editorChanged() {
   startContentChangedTimeout();
 }
 
-// Inline title field: a brand-new note shows the placeholder instead of the
-// default title; empty input restores the saved title instead of saving "".
+// The canonical new-note filename is a storage fallback, not visible title text.
 const noteTitleField = computed({
   get: () =>
-    isNewNote.value && newTitle.value === defaultNoteTitle
+    isUntitledNoteTitle(note.value.title) &&
+    (!newTitle.value || newTitle.value === defaultNoteTitle)
       ? ""
       : newTitle.value,
   set: (value: string) => {
+    // Keep the field editable while the user is deleting the title. Trimming
+    // is deferred until a title is persisted so an empty value is not written
+    // back from the current note title.
     newTitle.value = value;
+    startContentChangedTimeout();
   },
 });
 
-function titleEdited() {
-  const trimmed = newTitle.value.trim();
-  if (!trimmed) {
-    newTitle.value = isNewNote.value
-      ? defaultNoteTitle
-      : note.value.title || defaultNoteTitle;
-    return;
-  }
-  newTitle.value = trimmed;
-  startContentChangedTimeout();
+function persistedTitle() {
+  const title = newTitle.value.trim();
+  if (title) return title;
+  return isUntitledNoteTitle(note.value.title)
+    ? note.value.title
+    : defaultNoteTitle;
+}
+
+function editableTitleForStorageTitle(title: string) {
+  if (!title) return defaultNoteTitle;
+  return isUntitledNoteTitle(title) && title !== defaultNoteTitle ? "" : title;
+}
+
+function displayNoteTitle(title: string) {
+  return isUntitledNoteTitle(title) ? defaultNoteTitle : title;
 }
 
 function togglePanel(panel: "find" | "style") {
@@ -1107,7 +1136,7 @@ function saveReminder() {
 
 function openTitleDialog() {
   titleInput.value =
-    newTitle.value === defaultNoteTitle ? "" : newTitle.value || "";
+    isUntitledNoteTitle(newTitle.value) ? "" : newTitle.value || "";
   isTitleDialogVisible.value = true;
 }
 
@@ -1129,7 +1158,11 @@ function noteExportData() {
   const parser = document.createElement("div");
   parser.innerHTML = html;
   return {
-    title: newTitle.value || note.value.title || "MioNote",
+    title:
+      newTitle.value.trim() ||
+      (isUntitledNoteTitle(note.value.title)
+        ? defaultNoteTitle
+        : note.value.title || "MioNote"),
     markdown,
     html,
     text: parser.innerText.trim(),
@@ -1297,7 +1330,7 @@ function openHistory() {
 
 function restoreHistory(entry) {
   const apply = () => {
-    newTitle.value = entry.title;
+    newTitle.value = editableTitleForStorageTitle(entry.title);
     toastEditor.value?.setMarkdown(entry.content);
     editorCharacterCount.value = countCharacters(entry.content);
     startContentChangedTimeout();
@@ -1473,18 +1506,19 @@ function deleteConfirmedHandler() {
 
 // Note Saving
 function saveHandler(closeAction: CloseAction | null = null) {
+  const title = persistedTitle();
+
   // Invalid Character Validation
-  if (reservedFilenameCharacters.test(newTitle.value)) {
+  if (reservedFilenameCharacters.test(title)) {
     badFilenameToast(t("note.title"));
     return;
   }
 
-  // Save Note
   const newContent = toastEditor.value.getMarkdown();
   if (isNewNote.value) {
-    saveNew(newTitle.value, newContent, closeAction);
+    saveNew(title, newContent, closeAction);
   } else {
-    saveExisting(newTitle.value, newContent, closeAction);
+    saveExisting(title, newContent, closeAction);
   }
 }
 
@@ -1534,7 +1568,7 @@ function saveExisting(
 
 function noteSaveFailure(error) {
   if (error.response?.status === 409) {
-    toast.add(getToastOptions(t("note.duplicate"), t("common.error"), "error"));
+    duplicateNoteToast(error);
   } else if (error.response?.status === 413) {
     entityTooLargeToast(t("note.title"));
   } else {
@@ -1558,11 +1592,9 @@ function autoSaveHandler() {
     autoSaveQueued = true;
     return;
   }
-
-  const title = newTitle.value || defaultNoteTitle;
+  const title = persistedTitle();
   const content = toastEditor.value.getMarkdown();
   if (title === note.value.title && content === note.value.content) return;
-
   const isCreating = !note.value.title;
   const previousTitle = note.value.title;
   const draftKey = draftStorageKey();
@@ -1582,7 +1614,7 @@ function autoSaveHandler() {
       }
 
       if (
-        newTitle.value === data.title &&
+        persistedTitle() === data.title &&
         toastEditor.value?.getMarkdown() === data.content
       ) {
         unsavedChanges.value = false;
@@ -1594,9 +1626,7 @@ function autoSaveHandler() {
     })
     .catch((error) => {
       if (error.response?.status === 409) {
-        toast.add(
-          getToastOptions(t("note.duplicate"), t("common.error"), "error"),
-        );
+        duplicateNoteToast(error);
       } else if (error.response?.status === 413) {
         entityTooLargeToast(t("note.title"));
       } else {
@@ -1610,6 +1640,19 @@ function autoSaveHandler() {
         autoSaveHandler();
       }
     });
+}
+
+function duplicateNoteToast(error) {
+  const detail = String(error.response?.data?.detail || "");
+  const isEmptyUntitledConflict =
+    detail === "Cannot create a second untitled empty note." ||
+    (!newTitle.value.trim() &&
+      !(toastEditor.value?.getMarkdown() || "").trim());
+  const message =
+    isEmptyUntitledConflict
+      ? t("note.emptyUntitledDuplicate")
+      : t("note.duplicate");
+  toast.add(getToastOptions(message, t("common.error"), "error"));
 }
 
 // Note Closure
@@ -1841,8 +1884,8 @@ function loadDefaultEditorMode(): EditorMode {
 
 function isContentChanged() {
   return (
-    (newTitle.value || defaultNoteTitle) != note.value.title ||
-    (toastEditor.value?.getMarkdown() || "") != note.value.content
+    (toastEditor.value?.getMarkdown() || "") != note.value.content ||
+    persistedTitle() != note.value.title
   );
 }
 

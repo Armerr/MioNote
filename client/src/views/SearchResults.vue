@@ -57,7 +57,10 @@ import ActionMenu from "../components/ui/ActionMenu.vue";
 import Button from "../components/ui/Button.vue";
 import { useToast } from "../composables/useToast";
 import { params, searchSortOptions } from "../utils/constants";
-import { defaultNoteTitle } from "../utils/constants";
+import {
+  defaultNoteTitle,
+  isUntitledNoteTitle,
+} from "../utils/constants";
 import SearchInput from "../components/search/SearchInput.vue";
 
 const props = defineProps({
@@ -111,7 +114,7 @@ function sortResults(results) {
 }
 
 function resultListTitle(result) {
-  if (result.title !== defaultNoteTitle) return result.titleHighlightsOrTitle;
+  if (!isUntitledNoteTitle(result.title)) return result.titleHighlightsOrTitle;
   return result.preview || defaultNoteTitle;
 }
 
