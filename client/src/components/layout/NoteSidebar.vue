@@ -14,15 +14,6 @@
         {{ t("sidebar.allNotes") }}
       </div>
       <div class="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          :title="t('nav.newNote')"
-          :aria-label="t('nav.newNote')"
-          @click="router.push({ name: 'new' })"
-        >
-          <Plus class="h-6 w-6" />
-        </Button>
         <ActionMenu :items="menuItems" align="end">
           <template #trigger>
             <Button
@@ -59,12 +50,20 @@
       </div>
     </div>
 
-    <div class="px-5 pb-3">
+    <div class="flex items-center gap-2 px-5 pb-3">
       <div
-        class="rounded-lg bg-theme-background-elevated px-1 ring-1 ring-theme-border/70"
+        class="min-w-0 flex-1 rounded-lg bg-theme-background-elevated px-1 ring-1 ring-theme-border/70"
       >
         <SearchInput ref="searchInput" :placeholder="t('search.placeholder')" />
       </div>
+      <Button
+        size="icon-sm"
+        :title="t('nav.newNote')"
+        :aria-label="t('nav.newNote')"
+        @click="router.push({ name: 'new' })"
+      >
+        <Plus class="h-4 w-4" />
+      </Button>
     </div>
 
     <NoteList />

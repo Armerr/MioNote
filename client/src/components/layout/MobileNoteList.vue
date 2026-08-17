@@ -48,9 +48,9 @@
       </div>
     </header>
 
-    <div class="shrink-0 px-5 pb-2 pt-3">
+    <div class="flex items-center gap-2 px-5 pb-2 pt-3">
       <div
-        class="rounded-lg bg-theme-background-elevated px-1 ring-1 ring-theme-border/70"
+        class="min-w-0 flex-1 rounded-lg bg-theme-background-elevated px-1 ring-1 ring-theme-border/70"
       >
         <SearchInput
           ref="searchInput"
@@ -58,8 +58,6 @@
           @search="emit('navigate')"
         />
       </div>
-    </div>
-    <div class="flex shrink-0 items-center justify-end px-5 pb-1 pt-1">
       <Button size="sm" @click="createNote">
         <Plus class="h-4 w-4" />{{ t("sidebar.newNote") }}
       </Button>

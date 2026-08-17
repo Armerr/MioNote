@@ -150,12 +150,11 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="sm:hidden"
-            :title="t('nav.allNotes')"
+            class="bg-theme-background-elevated text-theme-text ring-1 ring-theme-border/70 hover:bg-theme-sidebar-active hover:text-theme-text hover:shadow-sm focus-visible:shadow-sm sm:hidden"
             :aria-label="t('nav.allNotes')"
             @click="returnToNotes"
           >
-            <ArrowLeft class="h-4 w-4" />
+            <ArrowLeft class="h-5 w-5 -translate-x-0.5" />
           </Button>
           <Button
             variant="ghost"
@@ -344,11 +343,11 @@
             <Button
               variant="ghost"
               size="icon-sm"
-              :title="t('nav.allNotes')"
+              class="bg-theme-background-elevated text-theme-text ring-1 ring-theme-border/70 hover:bg-theme-sidebar-active hover:text-theme-text hover:shadow-sm focus-visible:shadow-sm"
               :aria-label="t('nav.allNotes')"
               @click="returnToNotes"
             >
-              <ArrowLeft class="h-4 w-4" />
+              <ArrowLeft class="h-5 w-5 -translate-x-0.5" />
             </Button>
             <Button
               variant="ghost"
