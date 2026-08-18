@@ -6,7 +6,7 @@
 
 MioNote 是一个自托管、多用户、以 Markdown 文件为核心的笔记应用。界面默认使用中文，也可切换 English；编辑器支持 Markdown 源码和所见即所得模式，所有笔记均以标准 Markdown 保存。
 
-当前版本：`0.1.1`
+当前版本：`0.1.2`
 
 ## 功能
 
@@ -35,7 +35,7 @@ SQLite 数据库始终存放在 `MIONOTE_PATH/mionote.db`，不支持设置到�
 构建镜像：
 
 ```shell
-docker build -t armerr/mionote:0.1.1 .
+docker build -t armerr/mionote:0.1.2 .
 ```
 
 运行容器：
@@ -48,7 +48,7 @@ docker run -d \
   -e MIONOTE_SECRET_KEY="replace-with-a-long-random-secret" \
   -v "$(pwd)/data:/data" \
   -p 4233:4233 \
-  armerr/mionote:0.1.1
+  armerr/mionote:0.1.2
 ```
 
 访问 `http://localhost:4233`，在登录页创建第一个账户。注册默认开启；如需仅允许已有账户登录，设置 `MIONOTE_REGISTRATION_OPEN=false`。
@@ -58,7 +58,7 @@ docker run -d \
 ```yaml
 services:
   mionote:
-    image: armerr/mionote:0.1.1
+    image: armerr/mionote:0.1.2
     container_name: mionote
     environment:
       PUID: 1000

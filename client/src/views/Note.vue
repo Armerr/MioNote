@@ -150,7 +150,7 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="bg-theme-background-elevated text-theme-text ring-1 ring-theme-border/70 hover:bg-theme-sidebar-active hover:text-theme-text hover:shadow-sm focus-visible:shadow-sm sm:hidden"
+            class="bg-theme-background-elevated text-theme-text ring-1 ring-theme-border/70 hover:bg-theme-sidebar-active hover:text-theme-text hover:shadow-sm focus-visible:shadow-sm md:hidden"
             :aria-label="t('nav.allNotes')"
             @click="returnToNotes"
           >

@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="hidden h-full w-full shrink-0 border-r border-theme-border bg-theme-canvas lg:flex lg:flex-col"
+    class="hidden h-full w-full shrink-0 border-r border-theme-border bg-theme-canvas md:flex md:flex-col"
   >
     <div class="flex items-center justify-between px-5 pb-2 pt-5">
       <div

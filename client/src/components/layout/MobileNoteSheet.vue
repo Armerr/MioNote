@@ -1,7 +1,7 @@
 <template>
   <Sheet
     v-model="open"
-    class="inset-0 w-full border-0 bg-theme-canvas shadow-none lg:hidden"
+    class="inset-0 w-full border-0 bg-theme-canvas shadow-none md:hidden"
   >
     <MobileNoteList
       ref="mobileNoteList"

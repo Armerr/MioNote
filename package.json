@@ -1,6 +1,6 @@
 {
   "name": "mionote",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "MioNote: a Chinese-first, multi-user Markdown and rich-text note workspace.",
   "main": "client/index.html",

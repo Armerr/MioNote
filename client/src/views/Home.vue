@@ -1,8 +1,8 @@
 <template>
-  <MobileNoteList class="h-full lg:hidden" />
+  <MobileNoteList class="h-full md:hidden" />
 
   <div
-    class="hidden h-full min-h-[420px] items-center justify-center px-5 py-8 lg:flex"
+    class="hidden h-full min-h-[420px] items-center justify-center px-5 py-8 md:flex"
   >
     <div class="max-w-md text-center">
       <div
