@@ -132,6 +132,26 @@ MIONOTE_DEV_API_URL=http://127.0.0.1:4234 npm run dev
 
 前端源码位于 `client/src/`，Rust 服务位于 `src/`。后端会直接提供 `client/dist` 中已构建的前端文件；Vite 开发服务器默认监听 `http://127.0.0.1:5173/`。
 
+## Agent Skill
+
+MioNote 的自然语言记录能力作为 npm 项目 Skill 安装，不使用软链接。安装后重新打开 Agent 或开始新一轮对话：
+
+```shell
+npm install --save-dev github:Armerr/SKILL
+```
+
+项目根目录的 `AGENTS.md` 会指向 npm 包内的 `SKILL.md`。配置 MioNote 地址和认证信息后，可以先检查登录：
+
+```shell
+export MIONOTE_URL="http://127.0.0.1:4233"
+export MIONOTE_ACCESS_TOKEN="..."
+# 或使用 MIONOTE_USERNAME 和 MIONOTE_PASSWORD
+
+npx mionote-capture-note --auth-check
+```
+
+访问令牌优先；用户名和密码只用于本次换取 JWT，不会写入 Skill、笔记或日志。
+
 ## 测试与 API 文档
 
 ```shell
