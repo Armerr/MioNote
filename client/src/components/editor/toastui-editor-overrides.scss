@@ -186,14 +186,30 @@
   color: rgb(var(--theme-text));
 }
 
-// The editor command surface is rendered by EditorToolbar.vue with Lucide Vue icons.
-.toastui-editor-defaultUI > .toastui-editor-toolbar,
-.toastui-editor-defaultUI-toolbar,
-.toastui-editor-defaultUI .toastui-editor-md-tab-container,
+// MioNote owns the mode switch and app-level actions. Keep Toast UI's native
+// formatting toolbar visible so its table popup and table context menu remain
+// connected to the editor's ProseMirror state.
 .toastui-editor-mode-switch,
 .toastui-editor-main > .toastui-editor-tabs,
 .toastui-editor-main .toastui-editor-md-tab-style > .toastui-editor-tabs {
   display: none !important;
+}
+
+.toastui-editor-toolbar {
+  flex-shrink: 0;
+  overflow-x: auto;
+  border-color: rgb(var(--theme-border));
+  background-color: rgb(var(--theme-canvas));
+  scrollbar-width: thin;
+}
+
+.toastui-editor-toolbar-icons {
+  opacity: 0.8;
+}
+
+.toastui-editor-toolbar-icons:hover,
+.toastui-editor-toolbar-icons.active {
+  opacity: 1;
 }
 
 .toastui-editor-md-block-quote .toastui-editor-md-marked-text {

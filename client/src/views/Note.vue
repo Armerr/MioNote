@@ -143,8 +143,7 @@
       :style="editorStyle"
     >
       <div
-        class="relative h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 sm:pl-[var(--note-page-margin,1.5rem)] print:hidden"
-        :class="!editMode ? 'flex' : 'hidden sm:flex'"
+        class="relative flex h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 sm:pl-[var(--note-page-margin,1.5rem)] print:hidden"
       >
         <div class="flex items-center gap-1">
           <Button
@@ -169,7 +168,7 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="sm:h-10 sm:w-10"
+            class="max-sm:hidden sm:h-10 sm:w-10"
             :title="t('nav.undo')"
             :aria-label="t('nav.undo')"
             :disabled="!editMode"
@@ -180,7 +179,7 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="sm:h-10 sm:w-10"
+            class="max-sm:hidden sm:h-10 sm:w-10"
             :title="t('nav.redo')"
             :aria-label="t('nav.redo')"
             :disabled="!editMode"
@@ -192,39 +191,45 @@
             class="mx-0.5 h-5 w-px bg-theme-border sm:mx-1"
             aria-hidden="true"
           ></span>
-          <div class="hidden items-center gap-0.5 sm:flex">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              class="gap-1 px-2 text-xs font-medium sm:h-10 sm:w-auto"
+          <div
+            class="flex h-9 shrink-0 items-center gap-0.5 rounded-md border border-theme-border bg-theme-background-elevated p-0.5 sm:h-10"
+            role="tablist"
+            :aria-label="t('editor.mode')"
+          >
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="editorMode === 'wysiwyg'"
+              :disabled="!editMode"
+              class="inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded px-2 text-xs font-medium text-theme-text-muted outline-none transition-colors hover:bg-theme-sidebar-active hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 disabled:pointer-events-none disabled:opacity-45 sm:h-9"
               :class="
                 editorMode === 'wysiwyg'
-                  ? 'bg-theme-background-elevated text-theme-text'
-                  : 'text-theme-text-muted'
+                  ? 'bg-theme-canvas font-semibold text-theme-text shadow-sm ring-1 ring-theme-border/70'
+                  : ''
               "
               :title="t('editor.richText')"
               :aria-label="t('editor.richText')"
-              :disabled="!editMode"
               @click="changeEditorMode('wysiwyg')"
             >
-              <span>{{ t("editor.richText") }}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              class="gap-1 px-2 text-xs font-medium sm:h-10 sm:w-auto"
+              {{ t("editor.richText") }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="editorMode === 'markdown'"
+              :disabled="!editMode"
+              class="inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded px-2 text-xs font-medium text-theme-text-muted outline-none transition-colors hover:bg-theme-sidebar-active hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 disabled:pointer-events-none disabled:opacity-45 sm:h-9"
               :class="
                 editorMode === 'markdown'
-                  ? 'bg-theme-background-elevated text-theme-text'
-                  : 'text-theme-text-muted'
+                  ? 'bg-theme-canvas font-semibold text-theme-text shadow-sm ring-1 ring-theme-border/70'
+                  : ''
               "
               :title="t('editor.markdown')"
               :aria-label="t('editor.markdown')"
-              :disabled="!editMode"
               @click="changeEditorMode('markdown')"
             >
-              <span>{{ t("editor.markdown") }}</span>
-            </Button>
+              {{ t("editor.markdown") }}
+            </button>
           </div>
         </div>
 
@@ -338,113 +343,6 @@
       </div>
 
       <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
-        <EditorToolbar :editor="toastEditor" :previewing="isMarkdownPreview">
-          <template #mobile-controls>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              class="bg-theme-background-elevated text-theme-text ring-1 ring-theme-border/70 hover:bg-theme-sidebar-active hover:text-theme-text hover:shadow-sm focus-visible:shadow-sm"
-              :aria-label="t('nav.allNotes')"
-              @click="returnToNotes"
-            >
-              <ArrowLeft class="h-5 w-5 -translate-x-0.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              :title="t('nav.undo')"
-              :aria-label="t('nav.undo')"
-              :disabled="!editMode"
-              @click="runEditorCommand('undo')"
-            >
-              <Undo2 class="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              :title="t('nav.redo')"
-              :aria-label="t('nav.redo')"
-              :disabled="!editMode"
-              @click="runEditorCommand('redo')"
-            >
-              <Redo2 class="h-4 w-4" />
-            </Button>
-            <div class="flex items-center gap-0.5">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="h-9 w-auto px-2 text-xs font-medium"
-                :class="
-                  editorMode === 'wysiwyg'
-                    ? 'bg-theme-background-elevated text-theme-text'
-                    : 'text-theme-text-muted'
-                "
-                :title="t('editor.richText')"
-                :aria-label="t('editor.richText')"
-                :disabled="!editMode"
-                @click="changeEditorMode('wysiwyg')"
-              >
-                {{ t("editor.richText") }}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="h-9 w-auto px-2 text-xs font-medium"
-                :class="
-                  editorMode === 'markdown'
-                    ? 'bg-theme-background-elevated text-theme-text'
-                    : 'text-theme-text-muted'
-                "
-                :title="t('editor.markdown')"
-                :aria-label="t('editor.markdown')"
-                :disabled="!editMode"
-                @click="changeEditorMode('markdown')"
-              >
-                {{ t("editor.markdown") }}
-              </Button>
-            </div>
-            <span
-              v-if="editorMode === 'markdown'"
-              class="mx-1 h-4 w-px shrink-0 bg-theme-border"
-              aria-hidden="true"
-            ></span>
-            <Button
-              v-if="editorMode === 'markdown' && isMarkdownPreview"
-              variant="ghost"
-              size="icon-sm"
-              class="max-sm:h-9 max-sm:w-9"
-              :title="t('editor.editMarkdown')"
-              :aria-label="t('editor.editMarkdown')"
-              @click="setMarkdownPreview(false)"
-            >
-              <FilePenLine class="h-4 w-4" />
-            </Button>
-            <Button
-              v-else-if="editorMode === 'markdown'"
-              variant="ghost"
-              size="icon-sm"
-              class="max-sm:h-9 max-sm:w-9"
-              :title="t('editor.previewMarkdown')"
-              :aria-label="t('editor.previewMarkdown')"
-              @click="setMarkdownPreview(true)"
-            >
-              <Eye class="h-4 w-4" />
-            </Button>
-            <div class="ml-auto shrink-0">
-              <NoteMoreMenu :items="moreItems">
-                <template #trigger>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    :aria-label="t('nav.menu')"
-                  >
-                    <MoreVertical class="h-4 w-4" />
-                  </Button>
-                </template>
-              </NoteMoreMenu>
-            </div>
-          </template>
-        </EditorToolbar>
         <div
           class="shrink-0 pl-[var(--note-page-margin,1.5rem)] pr-6 pt-4 sm:pr-10 sm:pt-6"
         >
@@ -471,10 +369,10 @@
         </div>
         <div
           v-show="!isMarkdownPreview"
-          class="min-h-0 flex-1 pb-[calc(3.25rem+env(safe-area-inset-bottom))] sm:pb-0"
+          class="min-h-0 flex-1 pb-0"
           @contextmenu.capture="openNoteContextMenu"
         >
-          <ToastEditor
+          <TiptapEditor
             ref="toastEditor"
             class="h-full"
             :initialValue="getInitialEditorValue()"
@@ -505,78 +403,235 @@
   pointer-events: auto;
 }
 
-.note-editor-shell .toastui-editor-md-container .toastui-editor,
-.note-editor-shell .toastui-editor-md-container .CodeMirror,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror {
-  padding: 0.5rem var(--note-page-margin, 1.5rem) 2rem;
-}
-
-.note-editor-shell .toastui-editor-main,
-.note-editor-shell .toastui-editor-ww-container,
-.note-editor-shell .toastui-editor-md-container {
+.note-editor-shell .mionote-vditor-host,
+.note-editor-shell .mionote-vditor-host > .vditor,
+.note-editor-shell .vditor-content,
+.note-editor-shell .vditor-wysiwyg,
+.note-editor-shell .vditor-sv {
+  border: 0;
   background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
 }
 
-.note-editor-shell .toastui-editor-main {
+.note-editor-shell .mionote-vditor-host,
+.note-editor-shell .mionote-vditor-host > .vditor {
+  height: 100%;
+  min-height: 0;
+}
+
+.note-editor-shell .mionote-vditor-host > .vditor {
+  --border-color: rgb(var(--theme-border));
+  --second-color: rgb(var(--theme-text-very-muted) / 0.55);
+  --panel-background-color: rgb(var(--theme-background-elevated));
+  --panel-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  --toolbar-background-color: rgb(var(--theme-canvas));
+  --toolbar-icon-color: rgb(var(--theme-text-muted));
+  --toolbar-icon-hover-color: rgb(var(--theme-text));
+  --textarea-background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
+  --textarea-text-color: rgb(var(--theme-text));
+  --heading-border-color: rgb(var(--theme-border));
+  --blockquote-color: rgb(var(--theme-text-muted));
+  color: rgb(var(--theme-text));
   box-shadow: inset 0 0 24px rgb(61 56 41 / var(--note-paper-shadow-alpha, 0));
 }
 
-/* Keep Markdown source and rich-text editing on the same vertical rhythm. */
-.note-editor-shell .toastui-editor-md-container .toastui-editor,
-.note-editor-shell .toastui-editor-md-container .CodeMirror,
-.note-editor-shell .toastui-editor-md-container .CodeMirror-lines,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror {
+.note-editor-shell .vditor-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  overflow: visible;
+  border-color: rgb(var(--theme-border));
+  background-color: rgb(var(--theme-canvas));
+  /* Vditor copies its max-width centering padding to the toolbar inline.
+   * MioNote uses the same page margin for the toolbar and note body. */
+  padding-left: var(--note-page-margin, 1.5rem) !important;
+}
+
+.note-editor-shell .vditor-toolbar__item > button,
+.note-editor-shell .vditor-toolbar__item > div {
+  border-radius: 0.375rem;
+}
+
+.note-editor-shell .vditor-toolbar__item > button:hover,
+.note-editor-shell .vditor-toolbar__item > div:hover,
+.note-editor-shell .vditor-toolbar__item > button.vditor-menu--current {
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.note-editor-shell .vditor-toolbar__item > button:focus-visible {
+  outline: 2px solid rgb(var(--theme-text) / 0.35);
+  outline-offset: -2px;
+}
+
+.note-editor-shell .vditor-toolbar__item {
+  display: block;
+  float: none;
+  flex: 0 0 auto;
+}
+
+.note-editor-shell .vditor-toolbar__divider {
+  flex: 0 0 auto;
+  float: none;
+}
+
+.note-editor-shell .vditor-toolbar__item:has(> [data-type="edit-mode"]) {
+  display: none !important;
+}
+
+.note-editor-shell .vditor-content {
+  min-height: 0;
+}
+
+.note-editor-shell .vditor-wysiwyg,
+.note-editor-shell .vditor-wysiwyg .vditor-reset,
+.note-editor-shell .vditor-sv {
+  color: rgb(var(--theme-text));
   font-size: 1rem;
   line-height: 1.6rem;
 }
 
-.note-editor-shell .toastui-editor-md-container .CodeMirror pre {
-  margin: 0;
+.note-editor-shell .vditor-wysiwyg > .vditor-reset,
+.note-editor-shell .vditor-sv {
+  padding: 0.5rem var(--note-page-margin, 1.5rem) 2rem !important;
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset,
+.note-editor-shell .vditor-wysiwyg .vditor-reset p,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h1,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h2,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h3,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h4,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h5,
+.note-editor-shell .vditor-wysiwyg .vditor-reset h6,
+.note-editor-shell .vditor-wysiwyg .vditor-reset li,
+.note-editor-shell .vditor-wysiwyg .vditor-reset blockquote,
+.note-editor-shell .vditor-wysiwyg .vditor-reset td,
+.note-editor-shell .vditor-wysiwyg .vditor-reset th,
+.note-editor-shell .vditor-wysiwyg .vditor-reset pre,
+.note-editor-shell .vditor-wysiwyg .vditor-reset code {
   line-height: 1.6rem;
 }
 
-.note-editor-shell .toastui-editor-ww-container .ProseMirror,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror p,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h1,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h2,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h3,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h4,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h5,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h6,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror li,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror blockquote,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror td,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror th,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror pre,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror code {
+.note-editor-shell .vditor-sv pre {
+  margin: 0;
+  font-family: inherit;
   line-height: 1.6rem;
 }
 
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > p,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h1,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h2,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h3,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h4,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h5,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > h6,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > ul,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > ol,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > blockquote,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > pre,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror > table {
-  margin-top: 0;
-  margin-bottom: 0;
+.note-editor-shell .vditor-wysiwyg .vditor-reset {
+  background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
 }
 
-.note-editor-shell .toastui-editor-ww-container .ProseMirror p,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h1,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h2,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h3,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h4,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h5,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror h6,
-.note-editor-shell .toastui-editor-ww-container .ProseMirror li p {
-  margin: 0;
+.note-editor-shell .vditor-wysiwyg .vditor-reset:focus {
+  background-color: var(--note-paper-color, rgb(var(--theme-canvas))) !important;
+}
+
+/* Vditor's WYSIWYG mode adds block/heading markers beside the content. They
+ * are useful in a standalone editor, but do not belong in MioNote's canvas. */
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h1::before,
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h2::before,
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h3::before,
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h4::before,
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h5::before,
+.note-editor-shell .vditor-wysiwyg .vditor-reset > h6::before,
+.note-editor-shell .vditor-wysiwyg .vditor-wysiwyg__block::before,
+.note-editor-shell .vditor-wysiwyg__block::before {
+  display: none !important;
+}
+
+/* Vditor also renders a three-button block mover/remover popover when a
+ * paragraph is focused. It is not part of MioNote's editing surface. Keep
+ * the shared popover available for table row/column actions. */
+.note-editor-shell
+  .vditor-wysiwyg
+  > .vditor-panel.mionote-vditor-text-popover
+  button[data-type="up"],
+.note-editor-shell
+  .vditor-wysiwyg
+  > .vditor-panel.mionote-vditor-text-popover
+  button[data-type="down"],
+.note-editor-shell
+  .vditor-wysiwyg
+  > .vditor-panel.mionote-vditor-text-popover
+  button[data-type="remove"] {
+  display: none !important;
+}
+
+/* Fallback for browsers where the mutation observer runs after the panel is
+ * painted: identify text-only panels by their contents. */
+.note-editor-shell
+  .vditor-wysiwyg
+  > .vditor-panel:not(:has(.vditor-input))
+  :is(button[data-type="up"], button[data-type="down"], button[data-type="remove"]):not(:has(~ [data-type="insertRow"], ~ [data-type="insertColumn"], ~ [data-type="deleteRow"], ~ [data-type="deleteColumn"])) {
+  display: none !important;
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset table {
+  border-color: rgb(var(--theme-border));
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset th {
+  color: rgb(var(--theme-text));
+  background-color: rgb(var(--theme-background-elevated));
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset td,
+.note-editor-shell .vditor-wysiwyg .vditor-reset th {
+  border-color: rgb(var(--theme-border));
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset a {
+  color: rgb(var(--theme-text));
+  text-decoration-color: rgb(var(--theme-text-muted));
+}
+
+.note-editor-shell .vditor-wysiwyg .vditor-reset pre,
+.note-editor-shell .vditor-wysiwyg .vditor-reset code {
+  background-color: rgb(var(--theme-background-elevated));
+  color: rgb(var(--theme-text));
+}
+
+.note-editor-shell .vditor-sv {
+  color: rgb(var(--theme-text));
+  caret-color: rgb(var(--theme-text));
+}
+
+.note-editor-shell .vditor-sv:focus {
+  background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
+}
+
+.note-editor-shell .vditor-hint,
+.note-editor-shell .vditor-panel {
+  border-color: rgb(var(--theme-border));
+  background-color: rgb(var(--theme-background-elevated));
+  color: rgb(var(--theme-text));
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+@media (max-width: 639px) {
+  .note-editor-shell .vditor-toolbar {
+    padding-left: 0.75rem !important;
+    padding-right: 0.25rem;
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .note-editor-shell .vditor-toolbar__item {
+    display: block;
+    padding: 0;
+    vertical-align: top;
+  }
+
+  .note-editor-shell .vditor-toolbar__divider {
+    margin: 0.5rem 0.125rem;
+    vertical-align: top;
+  }
+
+  .note-editor-shell .vditor-toolbar__item > .vditor-tooltipped {
+    width: 1.375rem;
+    padding-left: 3px;
+    padding-right: 3px;
+  }
 }
 </style>
 
@@ -625,8 +680,7 @@ import {
 import { Note } from "../types/classes";
 import ConfirmModal from "../components/common/ConfirmModal.vue";
 import LoadingIndicator from "../components/common/LoadingIndicator.vue";
-import EditorToolbar from "../components/editor/EditorToolbar.vue";
-import ToastEditor from "../components/editor/ToastEditor.vue";
+import TiptapEditor from "../components/editor/TiptapEditor.vue";
 import ToastViewer from "../components/editor/ToastViewer.vue";
 import Button from "../components/ui/Button.vue";
 import Dialog from "../components/ui/Dialog.vue";
@@ -689,7 +743,9 @@ const loadingIndicator = ref<InstanceType<typeof LoadingIndicator> | null>(
 );
 const note = ref(new Note());
 const paperColors = {
-  plain: "#ffffff",
+  // The default paper follows the active theme instead of forcing a white
+  // editor surface in dark mode. Other paper choices remain explicit colors.
+  plain: "rgb(var(--theme-canvas))",
   mist: "#f5f5f4",
   cream: "#fffde8",
   peach: "#fff2e9",
@@ -1054,11 +1110,8 @@ function toggleLock() {
 function openNoteContextMenu(event: MouseEvent & { pointerType?: string }) {
   // A touch long-press must remain browser-owned so the native selection
   // handles and its menu stay anchored to the selected text.
-  const isMouse =
-    event.pointerType === "mouse" ||
-    (!event.pointerType &&
-      window.matchMedia("(hover: hover) and (pointer: fine)").matches);
-  if (!note.value.title || !isMouse) return;
+  const isTouch = event.pointerType === "touch";
+  if (isTouch) return;
 
   event.preventDefault();
   event.stopPropagation();
@@ -1702,13 +1755,13 @@ function addImageBlobHook(
 
   // Upload the image then use the callback to insert the URL into the editor
   const request = postAttachment(file);
-  if (!request) return;
-  request.then(function (data) {
-    if (data) {
-      // If the user has entered an alt text, use it. Otherwise, use the filename returned by the API.
-      const altText = altTextInputValue ? altTextInputValue : data.filename;
-      callback(data.url, altText);
-    }
+  if (!request) return Promise.reject(new Error("Invalid attachment"));
+  return request.then(function (data) {
+    if (!data) throw new Error("Attachment upload failed");
+    // If the user has entered an alt text, use it. Otherwise, use the filename returned by the API.
+    const altText = altTextInputValue ? altTextInputValue : data.filename;
+    callback(data.url, altText);
+    return data;
   });
 }
 

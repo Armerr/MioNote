@@ -100,7 +100,11 @@ const emit = defineEmits([
 ]);
 const { t } = useI18n();
 const paperOptions = [
-  { id: "plain", color: "#ffffff", label: "note.paperPlain" },
+  {
+    id: "plain",
+    color: "rgb(var(--theme-canvas))",
+    label: "note.paperPlain",
+  },
   { id: "mist", color: "#f5f5f4", label: "note.paperMist" },
   { id: "cream", color: "#fffde8", label: "note.paperCream" },
   { id: "peach", color: "#fff2e9", label: "note.paperPeach" },

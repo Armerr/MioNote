@@ -112,19 +112,7 @@ onMounted(() => {
       ? { addImageBlobHook: props.addImageBlobHook }
       : {},
   });
-  hideLegacyControls();
-  requestAnimationFrame(hideLegacyControls);
 });
-
-function hideLegacyControls() {
-  editorElement.value
-    ?.querySelectorAll(
-      ".toastui-editor-toolbar, .toastui-editor-md-tab-container, .toastui-editor-mode-switch",
-    )
-    .forEach((control) =>
-      control.style.setProperty("display", "none", "important"),
-    );
-}
 
 function getMarkdown() {
   return toastEditor.getMarkdown();
@@ -281,7 +269,6 @@ function selectRange(from, to) {
 
 function changeMode(mode) {
   toastEditor?.changeMode(mode);
-  requestAnimationFrame(hideLegacyControls);
 }
 
 function escapeHtml(value) {

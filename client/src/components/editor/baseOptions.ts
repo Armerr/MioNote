@@ -73,7 +73,6 @@ const baseOptions = {
   minHeight: "0px",
   plugins: [codeSyntaxHighlight],
   customHTMLRenderer: customHTMLRenderer,
-  toolbarItems: [],
   hideModeSwitch: true,
   usageStatistics: false,
 };
