@@ -1,14 +1,12 @@
 <template>
   <div
-    class="editor-toolbar flex shrink-0 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 sm:h-12 sm:items-center sm:gap-0.5 sm:overflow-x-auto sm:py-0 sm:pr-3"
-    :class="props.previewing ? 'sm:hidden' : ''"
+    class="editor-toolbar flex shrink-0 border-b border-theme-border bg-theme-canvas py-1 pl-[var(--note-page-margin,1.5rem)] pr-1.5 md:h-12 md:items-center md:gap-0.5 md:overflow-x-auto md:py-0 md:pr-3"
   >
-    <div class="flex min-w-0 flex-1 items-center gap-0.5 sm:hidden">
+    <div class="flex min-w-0 flex-1 items-center gap-0.5 md:hidden">
       <slot name="mobile-controls" />
     </div>
     <div
-      v-if="!props.previewing"
-      class="mobile-format-toolbar fixed inset-x-0 bottom-0 z-40 grid h-[calc(3.25rem+env(safe-area-inset-bottom))] grid-cols-8 items-start border-t border-theme-border bg-theme-canvas/95 px-1 pt-1 shadow-[0_-8px_24px_rgb(38_38_35/0.06)] backdrop-blur sm:contents"
+      class="mobile-format-toolbar fixed inset-x-0 bottom-0 z-40 flex h-[calc(3.25rem+env(safe-area-inset-bottom))] items-center gap-0.5 overflow-x-auto border-t border-theme-border bg-theme-canvas/95 px-2 pb-[env(safe-area-inset-bottom)] pt-1 shadow-[0_-8px_24px_rgb(38_38_35/0.06)] backdrop-blur md:contents"
     >
       <ActionMenu :items="headingItems" align="start">
         <template #trigger>
@@ -17,7 +15,7 @@
             size="icon-sm"
             :title="t('editor.heading')"
             :aria-label="t('editor.heading')"
-            class="gap-0.5 px-1.5 sm:w-auto"
+            class="gap-0.5 px-1.5 md:w-auto"
           >
             <Heading1 class="h-4 w-4" />
             <ChevronDown class="h-3.5 w-3.5" />
@@ -31,7 +29,7 @@
             size="icon-sm"
             :title="t('editor.font')"
             :aria-label="t('editor.font')"
-            class="gap-0.5 px-1.5 sm:w-auto"
+            class="gap-0.5 px-1.5 md:w-auto"
           >
             <span class="text-sm leading-none">16</span>
             <ChevronDown class="h-3.5 w-3.5" />
@@ -163,108 +161,100 @@
           </PopoverContent>
         </PopoverPortal>
       </PopoverRoot>
-    </div>
 
-    <div
-      v-if="!props.previewing"
-      class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
-    ></div>
+      <div
+        class="hidden md:mx-1 md:block md:h-5 md:w-px md:shrink-0 md:bg-theme-border"
+      ></div>
 
-    <div
-      v-if="!props.previewing"
-      class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
-    >
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="t('editor.taskList')"
-        :aria-label="t('editor.taskList')"
-        @click="run('taskList')"
-      >
-        <ListTodo class="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="t('editor.orderedList')"
-        :aria-label="t('editor.orderedList')"
-        @click="run('orderedList')"
-      >
-        <ListOrdered class="h-4 w-4" />
-      </Button>
-      <ActionMenu :items="alignmentItems" align="start">
-        <template #trigger>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            :title="t('editor.alignment')"
-            :aria-label="t('editor.alignment')"
-          >
-            <AlignLeft class="h-4 w-4" />
-            <ChevronDown class="-ml-1 h-3 w-3" />
-          </Button>
-        </template>
-      </ActionMenu>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="
-          formatPainterArmed
-            ? t('editor.applyFormatPainter')
-            : t('editor.formatPainter')
-        "
-        :aria-label="
-          formatPainterArmed
-            ? t('editor.applyFormatPainter')
-            : t('editor.formatPainter')
-        "
-        :class="
-          formatPainterArmed
-            ? 'bg-theme-background-elevated text-theme-brand-strong'
-            : ''
-        "
-        @click="toggleFormatPainter"
-      >
-        <Paintbrush class="h-4 w-4" />
-      </Button>
-    </div>
+      <div class="contents">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="t('editor.taskList')"
+          :aria-label="t('editor.taskList')"
+          @click="run('taskList')"
+        >
+          <ListTodo class="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="t('editor.orderedList')"
+          :aria-label="t('editor.orderedList')"
+          @click="run('orderedList')"
+        >
+          <ListOrdered class="h-4 w-4" />
+        </Button>
+        <ActionMenu :items="alignmentItems" align="start">
+          <template #trigger>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              :title="t('editor.alignment')"
+              :aria-label="t('editor.alignment')"
+            >
+              <AlignLeft class="h-4 w-4" />
+              <ChevronDown class="-ml-1 h-3 w-3" />
+            </Button>
+          </template>
+        </ActionMenu>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="
+            formatPainterArmed
+              ? t('editor.applyFormatPainter')
+              : t('editor.formatPainter')
+          "
+          :aria-label="
+            formatPainterArmed
+              ? t('editor.applyFormatPainter')
+              : t('editor.formatPainter')
+          "
+          :class="
+            formatPainterArmed
+              ? 'bg-theme-background-elevated text-theme-brand-strong'
+              : ''
+          "
+          @click="toggleFormatPainter"
+        >
+          <Paintbrush class="h-4 w-4" />
+        </Button>
+      </div>
 
-    <div
-      v-if="!props.previewing"
-      class="hidden sm:mx-1 sm:block sm:h-5 sm:w-px sm:shrink-0 sm:bg-theme-border"
-    ></div>
+      <div
+        class="hidden md:mx-1 md:block md:h-5 md:w-px md:shrink-0 md:bg-theme-border"
+      ></div>
 
-    <div
-      v-if="!props.previewing"
-      class="contents max-sm:hidden sm:flex sm:shrink-0 sm:items-center sm:gap-0.5"
-    >
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="t('editor.media')"
-        :aria-label="t('editor.media')"
-        @click="chooseMedia"
-      >
-        <ImagePlus class="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="t('editor.table')"
-        :aria-label="t('editor.table')"
-        @click="tableDialogOpen = true"
-      >
-        <Table2 class="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        :title="t('editor.attachment')"
-        :aria-label="t('editor.attachment')"
-        @click="chooseAttachment"
-      >
-        <Paperclip class="h-4 w-4" />
-      </Button>
+      <div class="contents">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="t('editor.media')"
+          :aria-label="t('editor.media')"
+          @click="chooseMedia"
+        >
+          <ImagePlus class="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="t('editor.table')"
+          :aria-label="t('editor.table')"
+          @click="tableDialogOpen = true"
+        >
+          <Table2 class="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          :title="t('editor.attachment')"
+          :aria-label="t('editor.attachment')"
+          @click="chooseAttachment"
+        >
+          <Paperclip class="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   </div>
 
@@ -344,16 +334,14 @@ import ActionMenu from "../ui/ActionMenu.vue";
 import Button from "../ui/Button.vue";
 import Dialog from "../ui/Dialog.vue";
 import Input from "../ui/Input.vue";
-import type { EditorSelectionStyle, ToastEditorHandle } from "../../types";
+import type { EditorSelectionStyle, NoteEditorHandle } from "../../types";
 
 const props = withDefaults(
   defineProps<{
-    editor?: ToastEditorHandle | null;
-    previewing?: boolean;
+    editor?: NoteEditorHandle | null;
   }>(),
   {
     editor: null,
-    previewing: false,
   },
 );
 
@@ -451,7 +439,7 @@ const alignmentItems = computed(() => [
 ]);
 
 function syncCompactViewport() {
-  isCompactViewport.value = window.matchMedia("(max-width: 639px)").matches;
+  isCompactViewport.value = window.matchMedia("(max-width: 767px)").matches;
 }
 
 function run(command: string, payload?: unknown) {
@@ -539,7 +527,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   .editor-toolbar {
     gap: 0;
     padding-block: 0.125rem;
@@ -556,19 +544,19 @@ onBeforeUnmount(() => {
 
   .mobile-format-toolbar :deep([data-reka-dropdown-menu-trigger]),
   .mobile-format-toolbar :deep([data-slot="popover-trigger"]) {
-    min-width: 0;
+    flex: 0 0 auto;
   }
 
   .mobile-format-toolbar :deep(button:not([role="switch"])) {
     height: 2.5rem;
     min-height: 2.5rem;
-    width: 100%;
-    min-width: 0;
-    padding-inline: 0.125rem;
+    min-width: 2.5rem;
+    flex: 0 0 auto;
+    padding-inline: 0.375rem;
   }
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .editor-toolbar {
     grid-template-rows: none;
     scrollbar-width: thin;

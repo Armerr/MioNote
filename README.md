@@ -12,7 +12,7 @@
   <a href="LICENSE">MIT License</a>
 </p>
 
-<p align="center"><code>v0.1.2</code> · 默认中文 · 支持 English · Docker 就绪</p>
+<p align="center"><code>v0.1.3</code> · 默认中文 · 支持 English · Docker 就绪</p>
 
 MioNote 面向个人和小型团队，提供多用户账户、Markdown 笔记、富文本编辑、全文搜索、标签、附件和 Wiki 链接。数据以普通 Markdown 文件保存，数据库只负责账户信息，迁移和备份保持简单透明。
 
@@ -51,7 +51,7 @@ docker run -d \
   -e MIONOTE_SECRET_KEY="replace-with-a-long-random-secret" \
   -v "$(pwd)/data:/data" \
   -p 4233:4233 \
-  armerr/mionote:0.1.2
+  armerr/mionote:0.1.3
 ```
 
 打开 <http://localhost:4233>，在登录页创建第一个账户。注册默认开启；如需关闭公开注册，增加：
@@ -67,7 +67,7 @@ docker run -d \
 ```yaml
 services:
   mionote:
-    image: armerr/mionote:0.1.2
+    image: armerr/mionote:0.1.3
     container_name: mionote
     environment:
       PUID: 1000

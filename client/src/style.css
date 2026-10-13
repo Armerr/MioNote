@@ -40,6 +40,7 @@
     --theme-brand-strong: 183 137 20;
     --theme-brand-soft: 255 244 202;
     --theme-brand-contrast: 47 42 28;
+    --theme-find: 86 76 214;
     --theme-background: 250 250 248;
     --theme-background-elevated: 241 241 237;
     --theme-header: 255 255 255;
@@ -62,6 +63,7 @@
     --theme-brand-strong: 255 213 91;
     --theme-brand-soft: 82 70 30;
     --theme-brand-contrast: 38 34 20;
+    --theme-find: 129 140 248;
     --theme-background: 29 29 27;
     --theme-background-elevated: 44 44 40;
     --theme-header: 35 35 32;
@@ -177,13 +179,6 @@
     opacity: 0;
     transform: translateX(-14px);
   }
-}
-
-/* Page-local find: decorations applied to every match in the editor. */
-.mionote-find-match {
-  background-color: rgb(250 204 21 / 0.42);
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgb(250 204 21 / 0.3);
 }
 
 @layer utilities {

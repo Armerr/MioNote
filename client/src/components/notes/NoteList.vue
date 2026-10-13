@@ -55,7 +55,9 @@
           @pointercancel="cancelLongPress"
           @pointermove="cancelLongPress"
         >
-          <p class="line-clamp-2 text-[17px] leading-6 text-theme-text">
+          <p
+            class="line-clamp-2 text-[17px] font-semibold leading-6 text-theme-text"
+          >
             {{ noteListTitle(note) }}
           </p>
           <p
@@ -373,7 +375,7 @@ function noteClasses(note) {
   return (route.name === "note" && route.params.title === note.title) ||
     (isContextMenuVisible.value && contextNote.value?.title === note.title)
     ? "rounded-xl bg-theme-sidebar-active"
-    : "border-b-theme-border hover:rounded-xl hover:bg-theme-sidebar-active";
+    : "rounded-xl hover:bg-theme-sidebar-active";
 }
 
 function isPinned(note) {

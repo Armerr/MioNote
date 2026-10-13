@@ -72,7 +72,6 @@ export type ButtonSize =
 
 export type ButtonType = "button" | "submit" | "reset";
 
-export type EditorMode = "markdown" | "wysiwyg";
 export type EditorSelection = [number, number];
 
 export interface NoteHistoryEntry {
@@ -90,29 +89,30 @@ export interface EditorSelectionStyle {
   bold?: boolean;
 }
 
-export interface ToastEditorHandle {
+export interface NoteEditorHandle {
   addAttachmentFile: (file: File) => void;
   addImageFile: (file: File) => void;
   addMediaFile: (file: File) => void;
   applyAlignment: (alignment: string) => boolean;
   applyCopiedStyle: (style: EditorSelectionStyle) => boolean;
   applyInlineStyle: (tag: string, style?: Record<string, string>) => boolean;
-  changeMode: (mode: EditorMode) => void;
   clearMatches: () => void;
   deleteSelection: () => void;
   exec: (command: string, payload?: unknown) => void;
   focus: () => void;
   getHTML: () => string;
-  getMarkdown: () => string;
   getSelectedText: () => string;
   getSelection: () => EditorSelection | undefined;
   getSelectionStyle: () => EditorSelectionStyle | null;
   getVisibleText: () => string;
-  highlightMatches: (query: string, caseSensitive?: boolean) => void;
+  highlightMatches: (
+    query: string,
+    caseSensitive?: boolean,
+    activeOffset?: number,
+  ) => void;
   insertText: (text: string) => void;
-  isWysiwygMode: () => boolean;
   replaceSelection: (text: string) => void;
   selectRange: (from: number, to: number) => void;
-  setMarkdown: (markdown: string) => void;
+  setHTML: (html: string) => void;
   setSelection: (start: number, end: number) => void;
 }

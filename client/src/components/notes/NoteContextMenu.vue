@@ -191,7 +191,7 @@ watch(open, (visible) => {
 });
 
 onMounted(() => {
-  mediaQuery = window.matchMedia("(max-width: 639px)");
+  mediaQuery = window.matchMedia("(max-width: 767px)");
   updateMobileMode();
   mediaQuery.addEventListener("change", updateMobileMode);
   document.addEventListener("pointerdown", handlePointerDown);

@@ -1,126 +1,7 @@
 <template>
   <div ref="editorRoot" class="mionote-tiptap-editor">
-    <div class="mionote-tiptap-toolbar" role="toolbar" aria-label="编辑工具">
-      <button
-        type="button"
-        title="标题"
-        aria-label="标题"
-        @mousedown.prevent
-        @click="toggleHeading"
-      >
-        <Heading1 class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="加粗"
-        aria-label="加粗"
-        @mousedown.prevent
-        @click="run('bold')"
-      >
-        <Bold class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="斜体"
-        aria-label="斜体"
-        @mousedown.prevent
-        @click="run('italic')"
-      >
-        <Italic class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="链接"
-        aria-label="链接"
-        @mousedown.prevent
-        @click="addLink"
-      >
-        <LinkIcon class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="无序列表"
-        aria-label="无序列表"
-        @mousedown.prevent
-        @click="run('bulletList')"
-      >
-        <List class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="待办事项"
-        aria-label="待办事项"
-        @mousedown.prevent
-        @click="run('taskList')"
-      >
-        <ListTodo class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="上传图片"
-        aria-label="上传图片"
-        @mousedown.prevent
-        @click="imageInput?.click()"
-      >
-        <ImagePlus class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="插入表格"
-        aria-label="插入表格"
-        @mousedown.prevent
-        @click="insertTable"
-      >
-        <Table2 class="h-4 w-4" />
-      </button>
-      <span class="mionote-tiptap-toolbar-spacer"></span>
-      <button
-        type="button"
-        title="撤销"
-        aria-label="撤销"
-        @mousedown.prevent
-        @click="run('undo')"
-      >
-        <Undo2 class="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        title="重做"
-        aria-label="重做"
-        @mousedown.prevent
-        @click="run('redo')"
-      >
-        <Redo2 class="h-4 w-4" />
-      </button>
-      <input
-        ref="imageInput"
-        type="file"
-        accept="image/*"
-        hidden
-        @change="handleImageInput"
-      />
-    </div>
-
-    <div
-      ref="editorSurface"
-      class="mionote-tiptap-surface"
-      @scroll="updateTableControlsPosition"
-    >
-      <EditorContent
-        v-show="mode === 'wysiwyg'"
-        :editor="editorContent"
-        class="mionote-tiptap-content"
-      />
-      <textarea
-        v-show="mode === 'markdown'"
-        ref="markdownInput"
-        v-model="markdownSource"
-        class="mionote-tiptap-markdown"
-        spellcheck="false"
-        aria-label="Markdown 源码"
-        @beforeinput="captureMarkdownHistory"
-        @input="handleMarkdownInput"
-      ></textarea>
+    <div ref="editorSurface" class="mionote-tiptap-surface">
+      <EditorContent :editor="editorContent" class="mionote-rich-text editor" />
     </div>
 
     <div
@@ -176,131 +57,31 @@
 </template>
 
 <script setup lang="ts">
-import { Extension } from "@tiptap/core";
-import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Editor, EditorContent } from "@tiptap/vue-3";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "@tiptap/markdown";
-import { TableKit } from "@tiptap/extension-table";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import UniqueID from "@tiptap/extension-unique-id";
-import Highlight from "@tiptap/extension-highlight";
-import TextAlign from "@tiptap/extension-text-align";
-import {
-  Bold,
-  Heading1,
-  ImagePlus,
-  Italic,
-  Link as LinkIcon,
-  List,
-  ListTodo,
-  Redo2,
-  Table2,
-  Undo2,
-} from "lucide-vue-next";
+import { addColumn, addRow, selectedRect } from "@tiptap/pm/tables";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
-import type {
-  EditorMode,
-  EditorSelection,
-  EditorSelectionStyle,
-} from "../../types";
+import { createNoteExtensions, findHighlightKey } from "./extensions";
+import type { EditorSelection, EditorSelectionStyle } from "../../types";
+import "./richTextContent.css";
 
 const props = defineProps({
   initialValue: { type: String, default: "" },
-  initialEditType: { type: String, default: "wysiwyg" },
   addImageBlobHook: Function,
 });
 
-const emit = defineEmits(["change", "keydown"]);
+const emit = defineEmits(["change", "keydown", "ready"]);
 const editorRoot = ref<HTMLElement | null>(null);
 const editorSurface = ref<HTMLElement | null>(null);
-const imageInput = ref<HTMLInputElement | null>(null);
-const markdownInput = ref<HTMLTextAreaElement | null>(null);
 const editor = ref<Editor | null>(null);
 const editorContent = computed(() => editor.value as unknown as Editor);
-const mode = ref<EditorMode>(
-  props.initialEditType === "markdown" ? "markdown" : "wysiwyg",
-);
-const markdownSource = ref(props.initialValue || "");
 let dragSource: { from: number; size: number } | null = null;
 let editorDom: HTMLElement | null = null;
 
-type MarkdownHistoryEntry = {
-  value: string;
-  selectionStart: number;
-  selectionEnd: number;
-};
-
-const markdownUndoStack = ref<MarkdownHistoryEntry[]>([]);
-const markdownRedoStack = ref<MarkdownHistoryEntry[]>([]);
-const maximumMarkdownHistoryEntries = 200;
-
-const topLevelTypes = [
-  "paragraph",
-  "heading",
-  "blockquote",
-  "bulletList",
-  "orderedList",
-  "taskList",
-  "codeBlock",
-  "horizontalRule",
-  "image",
-  "table",
-];
-
-const findHighlightKey = new PluginKey<DecorationSet>("mionoteFindHighlight");
-const FindHighlight = Extension.create({
-  name: "findHighlight",
-  addProseMirrorPlugins() {
-    return [
-      new Plugin<DecorationSet>({
-        key: findHighlightKey,
-        state: {
-          init: () => DecorationSet.empty,
-          apply(transaction, decorations) {
-            const nextDecorations = transaction.getMeta(findHighlightKey);
-            return (
-              nextDecorations ??
-              decorations.map(transaction.mapping, transaction.doc)
-            );
-          },
-        },
-        props: {
-          decorations(state) {
-            return findHighlightKey.getState(state);
-          },
-        },
-      }),
-    ];
-  },
-});
-
-const extensions = [
-  StarterKit.configure({ link: false }),
-  Link.configure({ openOnClick: false, autolink: true }),
-  Image.configure({ inline: false, allowBase64: true }),
-  TableKit.configure({ table: { resizable: true } }),
-  TaskList,
-  TaskItem.configure({ nested: true }),
-  Highlight.configure({ multicolor: true }),
-  TextAlign.configure({ types: ["heading", "paragraph"] }),
-  Placeholder.configure({ placeholder: "开始记录..." }),
-  UniqueID.configure({ types: topLevelTypes }),
-  Markdown,
-  FindHighlight,
-];
-
 const tableActive = ref(false);
 const tableControlsStyle = ref<Record<string, string> | null>(null);
-const isTableActive = computed(
-  () => mode.value === "wysiwyg" && tableActive.value,
-);
+const isTableActive = computed(() => tableActive.value);
 
 function syncTableState() {
   const current = editor.value;
@@ -334,257 +115,214 @@ function getSelectedTableElement() {
 function updateTableControlsPosition() {
   if (!isTableActive.value) return;
   const root = editorRoot.value;
-  const surface = editorSurface.value;
   const table = getSelectedTableElement();
-  if (!root || !surface || !table) {
+  if (!root || !table) {
     tableControlsStyle.value = null;
     return;
   }
 
   const rootRect = root.getBoundingClientRect();
-  const surfaceRect = surface.getBoundingClientRect();
   const tableRect = table.getBoundingClientRect();
-  const right = Math.min(tableRect.right, rootRect.right - 8);
-  const top = Math.max(tableRect.top + 8, surfaceRect.top + 8);
+  const barHeight = 36;
+  // Sit just above the table's top-right corner (outside the table) so the bar
+  // never covers cell content. If there is no room above, drop it just below.
+  let top = tableRect.top - rootRect.top - barHeight - 6;
+  if (top < 6) top = tableRect.bottom - rootRect.top + 6;
+  const rightEdge = Math.min(tableRect.right, rootRect.right - 8);
 
   tableControlsStyle.value = {
-    left: `${Math.max(8, right - rootRect.left - 8)}px`,
-    top: `${top - rootRect.top}px`,
+    top: `${top}px`,
+    right: `${Math.max(8, rootRect.right - rightEdge)}px`,
   };
-}
-
-function getMarkdown() {
-  if (mode.value === "markdown") return markdownSource.value;
-  return editor.value?.getMarkdown() || "";
 }
 
 function getHTML() {
   return editor.value?.getHTML() || "";
 }
 
-function getMarkdownHistoryEntry(): MarkdownHistoryEntry {
-  const input = markdownInput.value;
-  const fallbackPosition = markdownSource.value.length;
-  return {
-    value: markdownSource.value,
-    selectionStart: input?.selectionStart ?? fallbackPosition,
-    selectionEnd: input?.selectionEnd ?? fallbackPosition,
-  };
-}
-
-function appendMarkdownHistory(
-  stack: MarkdownHistoryEntry[],
-  entry: MarkdownHistoryEntry,
-) {
-  stack.push(entry);
-  if (stack.length > maximumMarkdownHistoryEntries) stack.shift();
-}
-
-function captureMarkdownHistory() {
-  const entry = getMarkdownHistoryEntry();
-  const lastEntry = markdownUndoStack.value[markdownUndoStack.value.length - 1];
-  if (
-    lastEntry?.value === entry.value &&
-    lastEntry.selectionStart === entry.selectionStart &&
-    lastEntry.selectionEnd === entry.selectionEnd
-  ) {
-    return;
-  }
-  appendMarkdownHistory(markdownUndoStack.value, entry);
-  markdownRedoStack.value = [];
-}
-
-function resetMarkdownHistory() {
-  markdownUndoStack.value = [];
-  markdownRedoStack.value = [];
-}
-
-function syncMarkdownSource(emitChange = true) {
-  editor.value?.commands.setContent(markdownSource.value, {
-    contentType: "markdown",
-    emitUpdate: false,
-  });
-  if (emitChange) emit("change");
-}
-
-function restoreMarkdownHistory(entry: MarkdownHistoryEntry) {
-  markdownSource.value = entry.value;
-  syncMarkdownSource(false);
-  nextTick(() => {
-    const input = markdownInput.value;
-    if (!input) return;
-    input.focus();
-    input.setSelectionRange(entry.selectionStart, entry.selectionEnd);
-  });
+function setHTML(html: string) {
+  editor.value?.commands.setContent(html || "", { emitUpdate: false });
   emit("change");
 }
 
-function undoMarkdown() {
-  const entry = markdownUndoStack.value.pop();
-  if (!entry) return;
-  appendMarkdownHistory(markdownRedoStack.value, getMarkdownHistoryEntry());
-  restoreMarkdownHistory(entry);
-}
-
-function redoMarkdown() {
-  const entry = markdownRedoStack.value.pop();
-  if (!entry) return;
-  appendMarkdownHistory(markdownUndoStack.value, getMarkdownHistoryEntry());
-  restoreMarkdownHistory(entry);
-}
-
-function setMarkdown(markdown: string) {
-  markdownSource.value = markdown || "";
-  resetMarkdownHistory();
-  syncMarkdownSource();
-}
-
 function focus() {
-  if (mode.value === "markdown") markdownInput.value?.focus();
-  else editor.value?.commands.focus();
+  editor.value?.commands.focus();
 }
 
-function isWysiwygMode() {
-  return mode.value === "wysiwyg";
+// "Add column/row" appends at the far right/bottom of the table rather than
+// next to the current cell, matching the toolbar's "新增列 / 新增行" wording.
+// The prosemirror-tables helpers carry their own prosemirror-state types, which
+// don't structurally match the copies Tiptap re-exports, so the state/tr are
+// cast at the boundary.
+function appendColumnToTable() {
+  return appendTableTrack("column");
 }
 
-function run(command: string) {
-  if (mode.value === "markdown") {
-    if (command === "undo") undoMarkdown();
-    else if (command === "redo") redoMarkdown();
-    return;
-  }
+function appendRowToTable() {
+  return appendTableTrack("row");
+}
+
+function appendTableTrack(axis: "column" | "row") {
+  const current = editor.value;
+  if (!current) return false;
+  const rect = selectedRect(
+    current.state as unknown as Parameters<typeof selectedRect>[0],
+  );
+  if (!rect) return false;
+  const tr = current.state.tr as unknown as Parameters<typeof addColumn>[0];
+  const next =
+    axis === "column"
+      ? addColumn(tr, rect, rect.map.width)
+      : addRow(tr, rect, rect.map.height);
+  current.view.dispatch(
+    next as unknown as Parameters<typeof current.view.dispatch>[0],
+  );
+  return true;
+}
+
+function run(command: string, payload?: any) {
   const current = editor.value;
   if (!current) return;
   const chain = current.chain().focus();
   const commandMap: Record<string, () => boolean> = {
+    paragraph: () => chain.setParagraph().run(),
     bold: () => chain.toggleBold().run(),
     italic: () => chain.toggleItalic().run(),
+    strike: () => chain.toggleStrike().run(),
+    underline: () => chain.toggleUnderline().run(),
     bulletList: () => chain.toggleBulletList().run(),
+    orderedList: () => chain.toggleOrderedList().run(),
     taskList: () => chain.toggleTaskList().run(),
     undo: () => chain.undo().run(),
     redo: () => chain.redo().run(),
-    addRowAfter: () => chain.addRowAfter().run(),
-    addColumnAfter: () => chain.addColumnAfter().run(),
+    addRowAfter: () => appendRowToTable(),
+    addColumnAfter: () => appendColumnToTable(),
     deleteRow: () => chain.deleteRow().run(),
     deleteColumn: () => chain.deleteColumn().run(),
     deleteTable: () => chain.deleteTable().run(),
   };
-  if (commandMap[command]) commandMap[command]();
+
+  let handled = false;
+  if (command === "heading") {
+    handled = current
+      .chain()
+      .focus()
+      .toggleHeading({ level: payload?.level ?? 1 })
+      .run();
+  } else if (command === "addTable") {
+    handled = current
+      .chain()
+      .focus()
+      .insertTable({
+        rows: payload?.rowCount ?? 2,
+        cols: payload?.columnCount ?? 2,
+        withHeaderRow: true,
+      })
+      .run();
+  } else if (commandMap[command]) {
+    handled = commandMap[command]();
+  }
+
   syncTableState();
-  emit("change");
-}
-
-function toggleHeading() {
-  if (!editor.value || mode.value !== "wysiwyg") return;
-  editor.value.chain().focus().toggleHeading({ level: 2 }).run();
-  emit("change");
-}
-
-function addLink() {
-  if (!editor.value || mode.value !== "wysiwyg") return;
-  const previous = editor.value.getAttributes("link").href || "https://";
-  const href = window.prompt("链接地址", previous);
-  if (href === null) return;
-  if (!href.trim()) editor.value.chain().focus().unsetLink().run();
-  else editor.value.chain().focus().setLink({ href: href.trim() }).run();
-  emit("change");
-}
-
-function insertTable() {
-  if (!editor.value || mode.value !== "wysiwyg") return;
-  editor.value
-    .chain()
-    .focus()
-    .insertTable({ rows: 2, cols: 2, withHeaderRow: true })
-    .run();
-  syncTableState();
-  emit("change");
+  if (handled) emit("change");
 }
 
 function insertText(text: string) {
   if (!text) return;
-  if (mode.value === "markdown") {
-    const input = markdownInput.value;
-    if (!input) return;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    captureMarkdownHistory();
-    markdownSource.value = `${markdownSource.value.slice(0, start)}${text}${markdownSource.value.slice(end)}`;
-    nextTick(() => {
-      input.setSelectionRange(start + text.length, start + text.length);
-    });
-    handleMarkdownInput();
-  } else {
-    editor.value?.chain().focus().insertContent(text).run();
-    emit("change");
-  }
+  editor.value
+    ?.chain()
+    .focus()
+    .insertContent({ type: "text", text })
+    .run();
+  emit("change");
 }
 
 function replaceSelection(text: string) {
-  if (mode.value === "markdown") {
-    insertText(text);
-    return;
+  const current = editor.value;
+  if (!current) return;
+  if (!text) {
+    current.chain().focus().deleteSelection().run();
+  } else {
+    current
+      .chain()
+      .focus()
+      .insertContent({ type: "text", text })
+      .run();
   }
-  editor.value?.chain().focus().insertContent(text).run();
   emit("change");
 }
 
 function deleteSelection() {
-  if (mode.value === "markdown") {
-    const input = markdownInput.value;
-    if (!input || input.selectionStart === input.selectionEnd) return;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    captureMarkdownHistory();
-    markdownSource.value = `${markdownSource.value.slice(0, start)}${markdownSource.value.slice(end)}`;
-    nextTick(() => input.setSelectionRange(start, start));
-    handleMarkdownInput();
-  } else {
-    editor.value?.chain().focus().deleteSelection().run();
-    emit("change");
-  }
+  editor.value?.chain().focus().deleteSelection().run();
+  emit("change");
 }
 
 function getSelectedText() {
-  if (mode.value === "markdown") {
-    const input = markdownInput.value;
-    return input
-      ? markdownSource.value.slice(input.selectionStart, input.selectionEnd)
-      : "";
-  }
   const current = editor.value;
   if (!current) return "";
   const { from, to } = current.state.selection;
   return current.state.doc.textBetween(from, to, "\n", "\ufffc");
 }
 
-function visibleOffsetToPos(target: number) {
+// Builds a map from visible-text offsets (as produced by getVisibleText) to
+// document positions, mirroring ProseMirror's
+// `textBetween(0, size, "\n", "\ufffc")` exactly. textBetween emits a "\n"
+// separator before every block (except the first) and one "\ufffc" per leaf
+// node (e.g. an image). Reproducing that walk here — instead of re-deriving
+// offsets with a separate heuristic — keeps find/replace indices in lockstep
+// with the string the search actually runs against, so the "current" match is
+// never skipped. Cached per document, since highlightMatches calls it per match.
+let visibleTextCache: { doc: unknown; text: string; positions: number[] } | null =
+  null;
+
+function getVisibleTextMap() {
   const current = editor.value;
-  if (!current) return 1;
-  let result = 1;
-  let consumed = 0;
-  current.state.doc.descendants((node, pos) => {
-    if (node.isText) {
-      const end = consumed + node.text!.length;
-      if (target <= end) {
-        result = pos + Math.max(0, target - consumed);
-        return false;
+  if (!current) return { text: "", positions: [] as number[] };
+  const doc = current.state.doc;
+  if (visibleTextCache && visibleTextCache.doc === doc) return visibleTextCache;
+
+  const chars: string[] = [];
+  const positions: number[] = [];
+  let first = true;
+  doc.nodesBetween(0, doc.content.size, (node, pos) => {
+    const nodeText = node.isText ? node.text || "" : node.isLeaf ? "\ufffc" : "";
+    if (node.isBlock && ((node.isLeaf && nodeText) || node.isTextblock)) {
+      // A block separator ("\n") is emitted before every block after the first.
+      if (first) first = false;
+      else {
+        chars.push("\n");
+        positions.push(pos);
       }
-      consumed = end;
-    } else if (node.isTextblock) {
-      if (consumed > 0) consumed += 1;
+    }
+    if (nodeText) {
+      for (let i = 0; i < nodeText.length; i += 1) {
+        chars.push(nodeText[i]);
+        positions.push(pos + i);
+      }
     }
     return true;
   });
-  return result;
+
+  visibleTextCache = { doc, text: chars.join(""), positions };
+  return visibleTextCache;
+}
+
+// Maps a visible-text offset (as produced by getVisibleText) back to a document
+// position.
+function visibleOffsetToPos(target: number) {
+  const current = editor.value;
+  const { positions } = getVisibleTextMap();
+  if (!positions.length) return 1;
+  if (target <= 0) return positions[0];
+  if (target >= positions.length) {
+    return current
+      ? current.state.doc.content.size
+      : positions[positions.length - 1] + 1;
+  }
+  return positions[target];
 }
 
 function getSelection(): EditorSelection | undefined {
-  if (mode.value === "markdown") {
-    const input = markdownInput.value;
-    return input ? [input.selectionStart, input.selectionEnd] : undefined;
-  }
   const current = editor.value;
   if (!current) return undefined;
   const { from, to } = current.state.selection;
@@ -595,12 +333,6 @@ function getSelection(): EditorSelection | undefined {
 }
 
 function selectRange(start: number, end: number) {
-  if (mode.value === "markdown") {
-    const input = markdownInput.value;
-    input?.focus();
-    input?.setSelectionRange(start, end);
-    return;
-  }
   const current = editor.value;
   if (!current) return;
   const from = visibleOffsetToPos(start);
@@ -615,19 +347,14 @@ function setSelection(start: number, end: number) {
 }
 
 function getVisibleText() {
-  if (mode.value === "markdown") return markdownSource.value;
-  const current = editor.value;
-  return (
-    current?.state.doc.textBetween(
-      0,
-      current.state.doc.content.size,
-      "\n",
-      "\ufffc",
-    ) || ""
-  );
+  return getVisibleTextMap().text;
 }
 
-function highlightMatches(query: string, caseSensitive = false) {
+function highlightMatches(
+  query: string,
+  caseSensitive = false,
+  activeOffset?: number,
+) {
   const current = editor.value;
   if (!current) return;
   if (!query) {
@@ -636,7 +363,10 @@ function highlightMatches(query: string, caseSensitive = false) {
   }
 
   const doc = current.state.doc;
-  const text = doc.textBetween(0, doc.content.size, "\n", "\ufffc");
+  // Search against the same string the offsets are derived from (getVisibleText
+  // delegates to this map), so an active offset from the parent always lands on
+  // the right match.
+  const text = getVisibleTextMap().text;
   const haystack = caseSensitive ? text : text.toLocaleLowerCase();
   const needle = caseSensitive ? query : query.toLocaleLowerCase();
   const decorations: Decoration[] = [];
@@ -648,8 +378,16 @@ function highlightMatches(query: string, caseSensitive = false) {
     const from = visibleOffsetToPos(offset);
     const to = visibleOffsetToPos(offset + needle.length);
     if (to > from) {
+      // The active match gets an extra class so it stands out from the rest.
+      // The editor selection isn't reliable here: the find box holds focus, so
+      // browsers paint no (or a faint) selection for the match being jumped to.
+      const isActive = activeOffset != null && offset === activeOffset;
       decorations.push(
-        Decoration.inline(from, to, { class: "mionote-find-match" }),
+        Decoration.inline(from, to, {
+          class: isActive
+            ? "mionote-find-match mionote-find-match-current"
+            : "mionote-find-match",
+        }),
       );
     }
     offset = haystack.indexOf(needle, offset + needle.length);
@@ -675,7 +413,7 @@ function clearMatches() {
 }
 
 function getSelectionStyle(): EditorSelectionStyle | null {
-  if (!editor.value || mode.value !== "wysiwyg") return null;
+  if (!editor.value) return null;
   return {
     bold: editor.value.isActive("bold"),
     italic: editor.value.isActive("italic"),
@@ -683,51 +421,61 @@ function getSelectionStyle(): EditorSelectionStyle | null {
     underline: editor.value.isActive("underline"),
     inlineStyles: {
       color: editor.value.getAttributes("textStyle").color || "",
-      "font-size": "",
+      "font-size": editor.value.getAttributes("fontSize").fontSize || "",
     },
   };
 }
 
 function applyInlineStyle(tag: string, style: Record<string, string> = {}) {
-  if (!editor.value || mode.value !== "wysiwyg") return false;
+  if (!editor.value) return false;
   const chain = editor.value.chain().focus();
   if (tag === "strong") chain.toggleBold().run();
   else if (tag === "em") chain.toggleItalic().run();
   else if (tag === "strike") chain.toggleStrike().run();
   else if (tag === "u") chain.toggleUnderline().run();
-  else if (tag === "span" && style.color) {
-    editor.value.commands.insertContent(
-      `<span style="color:${style.color}">${getSelectedText()}</span>`,
-    );
-  } else if (tag === "mark") {
-    editor.value.commands.toggleHighlight?.({
-      color: style["background-color"],
-    });
-  }
+  else if (tag === "mark")
+    chain.setHighlight({ color: style["background-color"] }).run();
+  else if (tag === "span" && style.color) chain.setColor(style.color).run();
+  else if (tag === "span" && style["font-size"])
+    chain.setFontSize(style["font-size"]).run();
   emit("change");
   return true;
 }
 
 function applyAlignment(alignment: string) {
-  if (!editor.value || mode.value !== "wysiwyg") return false;
+  if (!editor.value) return false;
   editor.value.commands.setTextAlign?.(alignment);
   emit("change");
   return true;
 }
 
 function applyCopiedStyle(style: EditorSelectionStyle) {
-  if (style.bold) editor.value?.chain().focus().toggleBold().run();
-  if (style.italic) editor.value?.chain().focus().toggleItalic().run();
-  if (style.underline) editor.value?.chain().focus().toggleUnderline().run();
-  if (style.strike) editor.value?.chain().focus().toggleStrike().run();
+  if (!editor.value) return false;
+  const chain = editor.value.chain().focus();
+  // Set marks to match the copied style exactly (set/unset rather than toggle,
+  // so a target that already matches is not flipped off).
+  if (style.bold) chain.setMark("bold");
+  else chain.unsetMark("bold");
+  if (style.italic) chain.setMark("italic");
+  else chain.unsetMark("italic");
+  if (style.underline) chain.setMark("underline");
+  else chain.unsetMark("underline");
+  if (style.strike) chain.setMark("strike");
+  else chain.unsetMark("strike");
+  const color = style.inlineStyles?.color;
+  if (color) chain.setColor(color);
+  else chain.unsetColor();
+  const fontSize = style.inlineStyles?.["font-size"];
+  if (fontSize) chain.setFontSize(fontSize);
+  else chain.unsetFontSize();
+  chain.run();
   emit("change");
   return Boolean(getSelectedText());
 }
 
 function exec(command: string, payload?: unknown) {
   if (command === "selectAll") {
-    if (mode.value === "markdown") markdownInput.value?.select();
-    else editor.value?.commands.selectAll();
+    editor.value?.commands.selectAll();
   } else if (command === "addImage" && payload && typeof payload === "object") {
     const image = payload as { imageUrl?: string; altText?: string };
     editor.value
@@ -736,18 +484,16 @@ function exec(command: string, payload?: unknown) {
       .setImage({ src: image.imageUrl || "", alt: image.altText || "image" })
       .run();
     emit("change");
-  } else run(command);
+  } else {
+    run(command, payload);
+  }
 }
 
 function addImageFile(file: File) {
   if (!file) return;
   const callback = (url: string, altText = file.name) => {
-    if (mode.value === "markdown") {
-      insertText(`![${altText}](${url})`);
-    } else {
-      editor.value?.chain().focus().setImage({ src: url, alt: altText }).run();
-      emit("change");
-    }
+    editor.value?.chain().focus().setImage({ src: url, alt: altText }).run();
+    emit("change");
   };
   if (props.addImageBlobHook) props.addImageBlobHook(file, callback);
   else {
@@ -763,36 +509,19 @@ function addMediaFile(file: File) {
 
 function addAttachmentFile(file: File) {
   if (!file) return;
-  const callback = (url: string, filename = file.name) =>
-    insertText(`[${filename}](${url})`);
+  const callback = (url: string, filename = file.name) => {
+    editor.value
+      ?.chain()
+      .focus()
+      .insertContent({
+        type: "text",
+        text: filename,
+        marks: [{ type: "link", attrs: { href: url } }],
+      })
+      .run();
+    emit("change");
+  };
   if (props.addImageBlobHook) props.addImageBlobHook(file, callback);
-}
-
-function handleImageInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file) addImageFile(file);
-  input.value = "";
-}
-
-function handleMarkdownInput() {
-  syncMarkdownSource();
-}
-
-function changeMode(nextMode: EditorMode) {
-  if (!editor.value || mode.value === nextMode) return;
-  if (nextMode === "markdown")
-    markdownSource.value = editor.value.getMarkdown();
-  else
-    editor.value.commands.setContent(markdownSource.value, {
-      contentType: "markdown",
-      emitUpdate: false,
-    });
-  mode.value = nextMode;
-  nextTick(() => {
-    syncTableState();
-    focus();
-  });
 }
 
 function decorateBlocks() {
@@ -800,8 +529,16 @@ function decorateBlocks() {
   if (!root) return;
   Array.from(root.children).forEach((child) => {
     const element = child as HTMLElement;
-    element.setAttribute("data-block", "true");
-    element.setAttribute("draggable", "true");
+    // Only touch the DOM when something actually needs to change. Re-setting
+    // an attribute on a selected block makes Chrome collapse the DOM selection,
+    // which ProseMirror then reads back, dropping a NodeSelection (e.g. a
+    // clicked image) as soon as any selection update fires.
+    if (element.getAttribute("data-block") !== "true") {
+      element.setAttribute("data-block", "true");
+    }
+    if (element.getAttribute("draggable") !== "true") {
+      element.setAttribute("draggable", "true");
+    }
   });
 }
 
@@ -861,23 +598,28 @@ function onDrop(event: DragEvent) {
 
 onMounted(() => {
   const instance = new Editor({
-    extensions,
+    extensions: createNoteExtensions({ editor: true }),
     content: props.initialValue || "",
-    contentType: "markdown",
     autofocus: false,
     onUpdate: () => {
-      if (mode.value === "wysiwyg") emit("change");
+      emit("change");
       syncTableState();
       decorateBlocks();
     },
     onSelectionUpdate: () => {
       syncTableState();
-      decorateBlocks();
+    },
+    // Clicking outside the editor (title, toolbar, sidebar) blurs it without
+    // changing the selection, so hide the floating table controls manually.
+    onBlur: () => {
+      tableActive.value = false;
+      tableControlsStyle.value = null;
     },
     onCreate: () =>
       nextTick(() => {
         syncTableState();
         decorateBlocks();
+        emit("ready");
       }),
   });
   editor.value = instance;
@@ -906,23 +648,20 @@ defineExpose({
   applyAlignment,
   applyCopiedStyle,
   applyInlineStyle,
-  changeMode,
   clearMatches,
   deleteSelection,
   exec,
   focus,
   getHTML,
-  getMarkdown,
   getSelectedText,
   getSelection,
   getSelectionStyle,
   getVisibleText,
   highlightMatches,
   insertText,
-  isWysiwygMode,
   replaceSelection,
   selectRange,
-  setMarkdown,
+  setHTML,
   setSelection,
 });
 </script>
@@ -930,67 +669,12 @@ defineExpose({
 <style>
 .mionote-tiptap-editor {
   position: relative;
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  flex-direction: column;
+  display: block;
   color: rgb(var(--theme-text));
-  background: var(--note-paper-color, rgb(var(--theme-canvas)));
-}
-
-.mionote-tiptap-toolbar {
-  display: flex;
-  min-height: 2.75rem;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.125rem;
-  overflow: hidden;
-  white-space: nowrap;
-  border-bottom: 1px solid rgb(var(--theme-border));
-  padding: 0.25rem var(--note-page-margin, 1.5rem);
-  background: rgb(var(--theme-canvas));
-}
-
-.mionote-tiptap-toolbar button {
-  display: inline-flex;
-  height: 2rem;
-  min-width: 2rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  gap: 0.125rem;
-  border: 0;
-  border-radius: 0.375rem;
-  padding: 0 0.375rem;
-  color: rgb(var(--theme-text-muted));
-  background: transparent;
-  cursor: pointer;
-}
-
-.mionote-tiptap-toolbar button:hover,
-.mionote-tiptap-toolbar button:focus-visible {
-  color: rgb(var(--theme-text));
-  background: rgb(var(--theme-background-elevated));
-  outline: none;
-}
-
-.mionote-tiptap-toolbar-divider {
-  width: 1px;
-  height: 1.25rem;
-  flex: 0 0 auto;
-  margin: 0 0.25rem;
-  background: rgb(var(--theme-border));
-}
-
-.mionote-tiptap-toolbar-spacer {
-  min-width: 0.25rem;
-  flex: 1 1 auto;
 }
 
 .mionote-tiptap-surface {
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow: auto;
+  min-height: 100%;
 }
 
 .mionote-tiptap-table-controls {
@@ -999,7 +683,6 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 0.125rem;
-  transform: translateX(-100%);
   border: 1px solid rgb(var(--theme-border));
   border-radius: 0.375rem;
   padding: 0.1875rem;
@@ -1035,106 +718,7 @@ defineExpose({
   color: rgb(var(--theme-danger, 190 24 93));
 }
 
-.mionote-tiptap-content,
-.mionote-tiptap-markdown {
-  display: block;
-  width: 100%;
-  min-height: 100%;
-  box-sizing: border-box;
-  border: 0;
-  padding: 0.75rem var(--note-page-margin, 1.5rem) 2rem;
-  color: rgb(var(--theme-text));
-  background: transparent;
-}
-
-.mionote-tiptap-markdown {
-  resize: none;
-  outline: none;
-  font: inherit;
-  line-height: 1.65;
-  white-space: pre-wrap;
-}
-
-.mionote-tiptap-content .tiptap {
-  min-height: 100%;
-  outline: none;
-  line-height: 1.65;
-}
-
-.mionote-tiptap-content .tiptap > [data-block] {
-  position: relative;
-  border-radius: 0.25rem;
-}
-
-.mionote-tiptap-content .tiptap > [data-block]:hover {
-  background: rgb(var(--theme-background-elevated) / 0.24);
-}
-
-.mionote-tiptap-content .tiptap > [data-block]::before {
-  position: absolute;
-  top: 0.55rem;
-  left: -1.125rem;
-  width: 0.75rem;
-  height: 0.9rem;
-  content: "\2807";
-  color: rgb(var(--theme-text-very-muted));
-  opacity: 0;
-  cursor: grab;
-  transition: opacity 120ms ease;
-}
-
-.mionote-tiptap-content .tiptap > [data-block]:hover::before {
-  opacity: 1;
-}
-
-.mionote-tiptap-content .tiptap table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.mionote-tiptap-content .tiptap th,
-.mionote-tiptap-content .tiptap td {
-  min-width: 5rem;
-  border: 1px solid rgb(var(--theme-border));
-  padding: 0.45rem 0.6rem;
-  vertical-align: top;
-}
-
-.mionote-tiptap-content .tiptap th {
-  background: rgb(var(--theme-background-elevated));
-}
-
-.mionote-tiptap-content .tiptap img {
-  max-width: 100%;
-  height: auto;
-}
-
-.mionote-tiptap-content .tiptap .selectedCell {
-  background: rgb(var(--theme-brand) / 0.12);
-}
-
-@media (max-width: 639px) {
-  .mionote-tiptap-toolbar {
-    min-height: 2.5rem;
-    padding: 0.125rem 0.5rem;
-  }
-
-  .mionote-tiptap-toolbar button {
-    min-width: 1.75rem;
-    height: 2rem;
-    padding: 0 0.25rem;
-  }
-
-  .mionote-tiptap-toolbar-divider,
-  .mionote-tiptap-toolbar-spacer,
-  .mionote-tiptap-toolbar button[title="链接"],
-  .mionote-tiptap-toolbar button[title="待办事项"],
-  .mionote-tiptap-toolbar button[title="撤销"],
-  .mionote-tiptap-toolbar button[title="重做"] {
-    display: none;
-  }
-
+@media (max-width: 767px) {
   .mionote-tiptap-table-controls {
     gap: 0;
     padding: 0.125rem;
@@ -1145,12 +729,6 @@ defineExpose({
     min-width: 1.625rem;
     padding: 0 0.25rem;
     font-size: 0.6875rem;
-  }
-
-  .mionote-tiptap-content,
-  .mionote-tiptap-markdown {
-    padding-right: 0.75rem;
-    padding-left: 0.75rem;
   }
 }
 </style>

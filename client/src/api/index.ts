@@ -200,3 +200,15 @@ export async function createAttachment(
     return Promise.reject(response);
   }
 }
+
+// Attachments are served behind auth, and `<img src>` cannot send the Bearer
+// header — the browser would fall back to the `token` cookie, which is not
+// always present (session/blocked/different host), leaving broken images.
+// Fetch the bytes through the authenticated axios client instead and hand back
+// a blob URL the `<img>` can render. `path` is the relative attachment URL
+// stored in the note (e.g. "attachments/foo.jpg").
+export async function fetchAttachmentObjectUrl(path: string): Promise<string> {
+  const url = new URL(path, document.baseURI).href;
+  const response = await api.get(url, { responseType: "blob" });
+  return URL.createObjectURL(response.data as Blob);
+}

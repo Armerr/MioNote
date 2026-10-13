@@ -27,23 +27,6 @@
           <LanguageToggle />
         </div>
 
-        <div
-          class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-2.5"
-        >
-          <span
-            class="flex min-w-0 items-center gap-2.5 text-sm font-medium text-theme-text-muted"
-          >
-            <FilePenLine class="h-4 w-4" />
-            {{ t("nav.defaultEditor") }}
-          </span>
-          <SegmentedControl
-            :model-value="defaultEditorMode"
-            :items="editorModeItems"
-            :aria-label="t('nav.defaultEditor')"
-            @update:model-value="setDefaultEditorMode"
-          />
-        </div>
-
         <DropdownMenuItem
           class="flex cursor-pointer items-center justify-between rounded-md px-3 py-2.5 text-sm text-theme-text-muted outline-none transition-colors data-[highlighted]:bg-theme-background-elevated data-[highlighted]:text-theme-text"
           @select.prevent="changeTheme"
@@ -79,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { FilePenLine, LogOut, Moon } from "lucide-vue-next";
+import { LogOut, Moon } from "lucide-vue-next";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -88,11 +71,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "reka-ui";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import LanguageToggle from "../common/LanguageToggle.vue";
-import SegmentedControl from "../ui/SegmentedControl.vue";
 import { toggleTheme } from "../../utils/helpers";
 
 defineProps({
@@ -102,23 +84,9 @@ defineProps({
 const emit = defineEmits(["sign-out"]);
 const { t } = useI18n();
 const darkTheme = ref(document.body.classList.contains("dark"));
-const defaultEditorMode = ref(
-  localStorage.getItem("defaultEditorMode") === "markdown"
-    ? "markdown"
-    : "wysiwyg",
-);
-const editorModeItems = computed(() => [
-  { value: "wysiwyg", label: t("editor.richText") },
-  { value: "markdown", label: t("editor.markdown") },
-]);
 
 function changeTheme() {
   toggleTheme();
   darkTheme.value = document.body.classList.contains("dark");
-}
-
-function setDefaultEditorMode(mode) {
-  defaultEditorMode.value = mode;
-  localStorage.setItem("defaultEditorMode", mode);
 }
 </script>

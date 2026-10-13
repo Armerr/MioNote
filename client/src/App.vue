@@ -27,7 +27,12 @@
           @keydown.right.prevent="resizeSidebarBy(16)"
         ></button>
         <main
-          class="xl:px-9 min-w-0 flex-1 overflow-y-auto bg-theme-canvas pb-0 sm:px-8 sm:pb-24 sm:pt-7 md:px-8 md:py-6"
+          class="min-w-0 flex-1 bg-theme-canvas"
+          :class="
+            isNoteWorkspace
+              ? 'flex min-h-0 flex-col overflow-hidden'
+              : 'overflow-y-auto pb-0 sm:px-8 sm:pb-24 sm:pt-7 md:px-8 md:py-6 xl:px-9'
+          "
         >
           <RouterView @open-search="focusWorkspaceSearch" />
         </main>
@@ -113,6 +118,12 @@ getConfig()
 const showWorkspace = computed(() => {
   return route.name !== "login";
 });
+
+// Note/new render a full-bleed editor that manages its own scroll regions, so
+// `main` must not add padding or scroll (which would move the fixed toolbar).
+const isNoteWorkspace = computed(
+  () => route.name === "note" || route.name === "new",
+);
 
 async function focusWorkspaceSearch() {
   if (window.matchMedia("(min-width: 768px)").matches) {

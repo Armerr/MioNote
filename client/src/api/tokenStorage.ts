@@ -7,7 +7,27 @@ function getBasePath() {
 
 function getCookieString(token?: string) {
   const basePath = getBasePath();
-  return `${tokenStorageKey}=${token}; Path=${basePath}; SameSite=Strict`;
+  let cookie = `${tokenStorageKey}=${token}; Path=${basePath}; SameSite=Strict`;
+  // `require()` on the backend also accepts auth via this cookie, which is how
+  // `<img src="attachments/...">` requests authenticate (they can't send the
+  // Bearer header). Without an explicit lifetime the cookie dies when the
+  // browser session ends, so a persisted token would load APIs but show broken
+  // images. Match the cookie lifetime to the token's own `exp` claim.
+  const maxAge = token ? tokenMaxAge(token) : 0;
+  if (maxAge > 0) cookie += `; Max-Age=${maxAge}`;
+  return cookie;
+}
+
+function tokenMaxAge(token: string) {
+  try {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const payload = JSON.parse(atob(padded));
+    if (typeof payload.exp !== "number") return 0;
+    return Math.max(0, payload.exp - Math.floor(Date.now() / 1000));
+  } catch {
+    return 0;
+  }
 }
 
 export function storeToken(token, persist = false) {

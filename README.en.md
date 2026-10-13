@@ -12,7 +12,7 @@
   <a href="LICENSE">MIT License</a>
 </p>
 
-<p align="center"><code>v0.1.2</code> · Chinese by default · English supported · Docker ready</p>
+<p align="center"><code>v0.1.3</code> · Chinese by default · English supported · Docker ready</p>
 
 MioNote is a self-hosted, multi-user note workspace for individuals and small teams. It combines Markdown storage with a rich-text editor, full-text search, tags, attachments, and Wiki links. Notes and attachments remain ordinary files; SQLite stores account data only, keeping migration and backup straightforward.
 
@@ -51,7 +51,7 @@ docker run -d \
   -e MIONOTE_SECRET_KEY="replace-with-a-long-random-secret" \
   -v "$(pwd)/data:/data" \
   -p 4233:4233 \
-  armerr/mionote:0.1.2
+  armerr/mionote:0.1.3
 ```
 
 Open <http://localhost:4233> and create the first account. Registration is enabled by default. To disable public registration, add:
@@ -67,7 +67,7 @@ Save the following as `compose.yaml`:
 ```yaml
 services:
   mionote:
-    image: armerr/mionote:0.1.2
+    image: armerr/mionote:0.1.3
     container_name: mionote
     environment:
       PUID: 1000

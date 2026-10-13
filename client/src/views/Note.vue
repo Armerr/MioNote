@@ -135,15 +135,15 @@
 
   <LoadingIndicator
     ref="loadingIndicator"
-    class="mx-auto flex h-full max-w-none flex-col"
+    class="flex h-full w-full flex-col"
   >
     <section
       ref="workspaceElement"
-      class="flex min-h-0 flex-1 flex-col bg-theme-canvas pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-0"
+      class="flex min-h-0 flex-1 flex-col bg-theme-canvas pt-[max(0.75rem,env(safe-area-inset-top))] md:pt-0"
       :style="editorStyle"
     >
       <div
-        class="relative flex h-12 shrink-0 items-center justify-between border-b border-theme-border sm:h-14 sm:pl-[var(--note-page-margin,1.5rem)] print:hidden"
+        class="relative flex h-12 shrink-0 items-center justify-between border-b border-theme-border md:h-14 md:pl-[var(--note-page-margin,1.5rem)] print:hidden"
       >
         <div class="flex items-center gap-1">
           <Button
@@ -158,7 +158,7 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="hidden sm:inline-flex"
+            class="hidden md:inline-flex"
             :title="t('nav.fullscreen')"
             :aria-label="t('nav.fullscreen')"
             @click="toggleFullscreen"
@@ -168,76 +168,32 @@
           <Button
             variant="ghost"
             size="icon-sm"
-            class="max-sm:hidden sm:h-10 sm:w-10"
+            class="max-md:hidden md:h-10 md:w-10"
             :title="t('nav.undo')"
             :aria-label="t('nav.undo')"
             :disabled="!editMode"
             @click="runEditorCommand('undo')"
           >
-            <Undo2 class="h-4 w-4 sm:h-5 sm:w-5" />
+            <Undo2 class="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
-            class="max-sm:hidden sm:h-10 sm:w-10"
+            class="max-md:hidden md:h-10 md:w-10"
             :title="t('nav.redo')"
             :aria-label="t('nav.redo')"
             :disabled="!editMode"
             @click="runEditorCommand('redo')"
           >
-            <Redo2 class="h-4 w-4 sm:h-5 sm:w-5" />
+            <Redo2 class="h-4 w-4 md:h-5 md:w-5" />
           </Button>
-          <span
-            class="mx-0.5 h-5 w-px bg-theme-border sm:mx-1"
-            aria-hidden="true"
-          ></span>
-          <div
-            class="flex h-9 shrink-0 items-center gap-0.5 rounded-md border border-theme-border bg-theme-background-elevated p-0.5 sm:h-10"
-            role="tablist"
-            :aria-label="t('editor.mode')"
-          >
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="editorMode === 'wysiwyg'"
-              :disabled="!editMode"
-              class="inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded px-2 text-xs font-medium text-theme-text-muted outline-none transition-colors hover:bg-theme-sidebar-active hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 disabled:pointer-events-none disabled:opacity-45 sm:h-9"
-              :class="
-                editorMode === 'wysiwyg'
-                  ? 'bg-theme-canvas font-semibold text-theme-text shadow-sm ring-1 ring-theme-border/70'
-                  : ''
-              "
-              :title="t('editor.richText')"
-              :aria-label="t('editor.richText')"
-              @click="changeEditorMode('wysiwyg')"
-            >
-              {{ t("editor.richText") }}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="editorMode === 'markdown'"
-              :disabled="!editMode"
-              class="inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded px-2 text-xs font-medium text-theme-text-muted outline-none transition-colors hover:bg-theme-sidebar-active hover:text-theme-text focus-visible:ring-2 focus-visible:ring-theme-brand/60 disabled:pointer-events-none disabled:opacity-45 sm:h-9"
-              :class="
-                editorMode === 'markdown'
-                  ? 'bg-theme-canvas font-semibold text-theme-text shadow-sm ring-1 ring-theme-border/70'
-                  : ''
-              "
-              :title="t('editor.markdown')"
-              :aria-label="t('editor.markdown')"
-              @click="changeEditorMode('markdown')"
-            >
-              {{ t("editor.markdown") }}
-            </button>
-          </div>
         </div>
 
-        <div class="flex shrink-0 items-center gap-0.5 pr-1 sm:gap-1">
+        <div class="flex shrink-0 items-center gap-0.5 pr-1 md:gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
-            class="hidden sm:inline-flex sm:h-10 sm:w-10"
+            class="hidden md:inline-flex md:h-10 md:w-10"
             :class="
               isFindPanelVisible
                 ? 'bg-theme-background-elevated text-theme-text'
@@ -247,12 +203,12 @@
             :aria-label="t('note.find')"
             @click="togglePanel('find')"
           >
-            <FileSearch class="h-4 w-4 sm:h-5 sm:w-5" />
+            <FileSearch class="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
-            class="hidden sm:inline-flex sm:h-10 sm:w-10"
+            class="hidden md:inline-flex md:h-10 md:w-10"
             :class="
               isStylePanelVisible
                 ? 'bg-theme-background-elevated text-theme-text'
@@ -262,44 +218,17 @@
             :aria-label="t('note.paperStyle')"
             @click="togglePanel('style')"
           >
-            <SlidersHorizontal class="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <span
-            v-if="editMode && editorMode === 'markdown'"
-            class="mx-1 h-5 w-px shrink-0 bg-theme-border"
-            aria-hidden="true"
-          ></span>
-          <Button
-            v-if="editMode && editorMode === 'markdown' && isMarkdownPreview"
-            variant="ghost"
-            size="icon-sm"
-            class="hidden sm:inline-flex sm:h-10 sm:w-10"
-            :title="t('editor.editMarkdown')"
-            :aria-label="t('editor.editMarkdown')"
-            @click="setMarkdownPreview(false)"
-          >
-            <FilePenLine class="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <Button
-            v-else-if="editMode && editorMode === 'markdown'"
-            variant="ghost"
-            size="icon-sm"
-            class="hidden sm:inline-flex sm:h-10 sm:w-10"
-            :title="t('editor.previewMarkdown')"
-            :aria-label="t('editor.previewMarkdown')"
-            @click="setMarkdownPreview(true)"
-          >
-            <Eye class="h-4 w-4 sm:h-5 sm:w-5" />
+            <SlidersHorizontal class="h-4 w-4 md:h-5 md:w-5" />
           </Button>
           <NoteMoreMenu :items="moreItems">
             <template #trigger>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                class="sm:h-10 sm:w-10"
+                class="md:h-10 md:w-10"
                 :aria-label="t('nav.menu')"
               >
-                <MoreVertical class="h-4 w-4 sm:h-5 sm:w-5" />
+                <MoreVertical class="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </template>
           </NoteMoreMenu>
@@ -330,57 +259,47 @@
 
       <div
         v-if="!editMode"
-        class="min-h-0 flex-1 overflow-y-auto px-4 pt-5 sm:pt-7"
+        class="min-h-0 flex-1 overflow-y-auto"
         @contextmenu.capture="openNoteContextMenu"
       >
-        <h1
-          v-if="note.title"
-          class="text-2xl font-semibold text-theme-text sm:text-3xl"
-        >
-          {{ displayNoteTitle(note.title) }}
-        </h1>
-        <ToastViewer :initialValue="note.content" class="toast-viewer pb-8" />
+        <div class="note-page-padding pb-8">
+          <h1
+            v-if="note.title"
+            class="mb-4 text-2xl font-bold text-theme-text sm:text-3xl"
+          >
+            {{ displayNoteTitle(note.title) }}
+          </h1>
+          <RichTextViewer :html="note.content" />
+        </div>
       </div>
 
-      <div v-else class="note-editor-shell flex min-h-0 flex-1 flex-col">
+      <div v-else class="flex min-h-0 flex-1 flex-col">
+        <EditorToolbar :editor="toastEditor" />
         <div
-          class="shrink-0 pl-[var(--note-page-margin,1.5rem)] pr-6 pt-4 sm:pr-10 sm:pt-6"
-        >
-          <input
-            v-model="noteTitleField"
-            type="text"
-            class="w-full bg-transparent text-2xl font-semibold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
-            :placeholder="t('note.title')"
-            @keydown.enter.prevent
-          />
-          <div class="mt-1.5 text-xs text-theme-text-muted">
-            {{ t("note.characterCount", { count: editorCharacterCount }) }}
-          </div>
-        </div>
-        <div
-          v-if="isMarkdownPreview"
-          class="min-h-0 flex-1 overflow-y-auto px-4 pb-8 sm:px-8"
-          :style="pageMarginStyle"
-        >
-          <ToastViewer
-            :initialValue="markdownPreviewContent"
-            class="toast-viewer markdown-preview"
-          />
-        </div>
-        <div
-          v-show="!isMarkdownPreview"
-          class="min-h-0 flex-1 pb-0"
+          class="note-page-scroll min-h-0 flex-1 overflow-y-auto"
           @contextmenu.capture="openNoteContextMenu"
         >
-          <TiptapEditor
-            ref="toastEditor"
-            class="h-full"
-            :initialValue="getInitialEditorValue()"
-            :initialEditType="editorMode"
-            :addImageBlobHook="addImageBlobHook"
-            @change="editorChanged"
-            @keydown="keydownHandler"
-          />
+          <div class="note-page-padding">
+            <input
+              v-model="noteTitleField"
+              type="text"
+              class="w-full bg-transparent text-2xl font-bold text-theme-text outline-none placeholder:text-theme-text-very-muted sm:text-3xl"
+              :placeholder="t('note.title')"
+              @keydown.enter.prevent="focusEditor"
+            />
+            <div class="mt-1.5 text-xs text-theme-text-muted">
+              {{ t("note.characterCount", { count: editorCharacterCount }) }}
+            </div>
+            <TiptapEditor
+              ref="toastEditor"
+              class="mt-4"
+              :initialValue="getInitialEditorValue()"
+              :addImageBlobHook="addImageBlobHook"
+              @change="editorChanged"
+              @keydown="keydownHandler"
+              @ready="captureBaseline"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -395,242 +314,19 @@
 </template>
 
 <style>
-/* Disable checkboxes in view mode. See https://github.com/nhn/tui.editor/issues/1087. */
-.toast-viewer li.task-list-item {
-  pointer-events: none;
-}
-.toast-viewer li.task-list-item a {
-  pointer-events: auto;
+.note-page-padding {
+  padding-inline: var(--note-page-margin, 1.5rem);
+  padding-top: 1.25rem;
 }
 
-.note-editor-shell .mionote-vditor-host,
-.note-editor-shell .mionote-vditor-host > .vditor,
-.note-editor-shell .vditor-content,
-.note-editor-shell .vditor-wysiwyg,
-.note-editor-shell .vditor-sv {
-  border: 0;
-  background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
+.note-page-scroll {
+  /* Keep the last lines clear of the fixed mobile formatting bar. */
+  scroll-padding-bottom: 4rem;
 }
 
-.note-editor-shell .mionote-vditor-host,
-.note-editor-shell .mionote-vditor-host > .vditor {
-  height: 100%;
-  min-height: 0;
-}
-
-.note-editor-shell .mionote-vditor-host > .vditor {
-  --border-color: rgb(var(--theme-border));
-  --second-color: rgb(var(--theme-text-very-muted) / 0.55);
-  --panel-background-color: rgb(var(--theme-background-elevated));
-  --panel-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
-  --toolbar-background-color: rgb(var(--theme-canvas));
-  --toolbar-icon-color: rgb(var(--theme-text-muted));
-  --toolbar-icon-hover-color: rgb(var(--theme-text));
-  --textarea-background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
-  --textarea-text-color: rgb(var(--theme-text));
-  --heading-border-color: rgb(var(--theme-border));
-  --blockquote-color: rgb(var(--theme-text-muted));
-  color: rgb(var(--theme-text));
-  box-shadow: inset 0 0 24px rgb(61 56 41 / var(--note-paper-shadow-alpha, 0));
-}
-
-.note-editor-shell .vditor-toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  overflow: visible;
-  border-color: rgb(var(--theme-border));
-  background-color: rgb(var(--theme-canvas));
-  /* Vditor copies its max-width centering padding to the toolbar inline.
-   * MioNote uses the same page margin for the toolbar and note body. */
-  padding-left: var(--note-page-margin, 1.5rem) !important;
-}
-
-.note-editor-shell .vditor-toolbar__item > button,
-.note-editor-shell .vditor-toolbar__item > div {
-  border-radius: 0.375rem;
-}
-
-.note-editor-shell .vditor-toolbar__item > button:hover,
-.note-editor-shell .vditor-toolbar__item > div:hover,
-.note-editor-shell .vditor-toolbar__item > button.vditor-menu--current {
-  background-color: rgb(var(--theme-background-elevated));
-}
-
-.note-editor-shell .vditor-toolbar__item > button:focus-visible {
-  outline: 2px solid rgb(var(--theme-text) / 0.35);
-  outline-offset: -2px;
-}
-
-.note-editor-shell .vditor-toolbar__item {
-  display: block;
-  float: none;
-  flex: 0 0 auto;
-}
-
-.note-editor-shell .vditor-toolbar__divider {
-  flex: 0 0 auto;
-  float: none;
-}
-
-.note-editor-shell .vditor-toolbar__item:has(> [data-type="edit-mode"]) {
-  display: none !important;
-}
-
-.note-editor-shell .vditor-content {
-  min-height: 0;
-}
-
-.note-editor-shell .vditor-wysiwyg,
-.note-editor-shell .vditor-wysiwyg .vditor-reset,
-.note-editor-shell .vditor-sv {
-  color: rgb(var(--theme-text));
-  font-size: 1rem;
-  line-height: 1.6rem;
-}
-
-.note-editor-shell .vditor-wysiwyg > .vditor-reset,
-.note-editor-shell .vditor-sv {
-  padding: 0.5rem var(--note-page-margin, 1.5rem) 2rem !important;
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset,
-.note-editor-shell .vditor-wysiwyg .vditor-reset p,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h1,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h2,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h3,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h4,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h5,
-.note-editor-shell .vditor-wysiwyg .vditor-reset h6,
-.note-editor-shell .vditor-wysiwyg .vditor-reset li,
-.note-editor-shell .vditor-wysiwyg .vditor-reset blockquote,
-.note-editor-shell .vditor-wysiwyg .vditor-reset td,
-.note-editor-shell .vditor-wysiwyg .vditor-reset th,
-.note-editor-shell .vditor-wysiwyg .vditor-reset pre,
-.note-editor-shell .vditor-wysiwyg .vditor-reset code {
-  line-height: 1.6rem;
-}
-
-.note-editor-shell .vditor-sv pre {
-  margin: 0;
-  font-family: inherit;
-  line-height: 1.6rem;
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset {
-  background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset:focus {
-  background-color: var(--note-paper-color, rgb(var(--theme-canvas))) !important;
-}
-
-/* Vditor's WYSIWYG mode adds block/heading markers beside the content. They
- * are useful in a standalone editor, but do not belong in MioNote's canvas. */
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h1::before,
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h2::before,
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h3::before,
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h4::before,
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h5::before,
-.note-editor-shell .vditor-wysiwyg .vditor-reset > h6::before,
-.note-editor-shell .vditor-wysiwyg .vditor-wysiwyg__block::before,
-.note-editor-shell .vditor-wysiwyg__block::before {
-  display: none !important;
-}
-
-/* Vditor also renders a three-button block mover/remover popover when a
- * paragraph is focused. It is not part of MioNote's editing surface. Keep
- * the shared popover available for table row/column actions. */
-.note-editor-shell
-  .vditor-wysiwyg
-  > .vditor-panel.mionote-vditor-text-popover
-  button[data-type="up"],
-.note-editor-shell
-  .vditor-wysiwyg
-  > .vditor-panel.mionote-vditor-text-popover
-  button[data-type="down"],
-.note-editor-shell
-  .vditor-wysiwyg
-  > .vditor-panel.mionote-vditor-text-popover
-  button[data-type="remove"] {
-  display: none !important;
-}
-
-/* Fallback for browsers where the mutation observer runs after the panel is
- * painted: identify text-only panels by their contents. */
-.note-editor-shell
-  .vditor-wysiwyg
-  > .vditor-panel:not(:has(.vditor-input))
-  :is(button[data-type="up"], button[data-type="down"], button[data-type="remove"]):not(:has(~ [data-type="insertRow"], ~ [data-type="insertColumn"], ~ [data-type="deleteRow"], ~ [data-type="deleteColumn"])) {
-  display: none !important;
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset table {
-  border-color: rgb(var(--theme-border));
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset th {
-  color: rgb(var(--theme-text));
-  background-color: rgb(var(--theme-background-elevated));
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset td,
-.note-editor-shell .vditor-wysiwyg .vditor-reset th {
-  border-color: rgb(var(--theme-border));
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset a {
-  color: rgb(var(--theme-text));
-  text-decoration-color: rgb(var(--theme-text-muted));
-}
-
-.note-editor-shell .vditor-wysiwyg .vditor-reset pre,
-.note-editor-shell .vditor-wysiwyg .vditor-reset code {
-  background-color: rgb(var(--theme-background-elevated));
-  color: rgb(var(--theme-text));
-}
-
-.note-editor-shell .vditor-sv {
-  color: rgb(var(--theme-text));
-  caret-color: rgb(var(--theme-text));
-}
-
-.note-editor-shell .vditor-sv:focus {
-  background-color: var(--note-paper-color, rgb(var(--theme-canvas)));
-}
-
-.note-editor-shell .vditor-hint,
-.note-editor-shell .vditor-panel {
-  border-color: rgb(var(--theme-border));
-  background-color: rgb(var(--theme-background-elevated));
-  color: rgb(var(--theme-text));
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
-}
-
-@media (max-width: 639px) {
-  .note-editor-shell .vditor-toolbar {
-    padding-left: 0.75rem !important;
-    padding-right: 0.25rem;
-    overflow: visible;
-    white-space: nowrap;
-  }
-
-  .note-editor-shell .vditor-toolbar__item {
-    display: block;
-    padding: 0;
-    vertical-align: top;
-  }
-
-  .note-editor-shell .vditor-toolbar__divider {
-    margin: 0.5rem 0.125rem;
-    vertical-align: top;
-  }
-
-  .note-editor-shell .vditor-toolbar__item > .vditor-tooltipped {
-    width: 1.375rem;
-    padding-left: 3px;
-    padding-right: 3px;
+@media (max-width: 767px) {
+  .note-page-padding {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
   }
 }
 </style>
@@ -642,7 +338,6 @@ import {
   ClipboardPaste,
   Copy,
   Download,
-  Eye,
   FileImage,
   FilePenLine,
   FileText,
@@ -681,7 +376,8 @@ import { Note } from "../types/classes";
 import ConfirmModal from "../components/common/ConfirmModal.vue";
 import LoadingIndicator from "../components/common/LoadingIndicator.vue";
 import TiptapEditor from "../components/editor/TiptapEditor.vue";
-import ToastViewer from "../components/editor/ToastViewer.vue";
+import EditorToolbar from "../components/editor/EditorToolbar.vue";
+import RichTextViewer from "../components/editor/RichTextViewer.vue";
 import Button from "../components/ui/Button.vue";
 import Dialog from "../components/ui/Dialog.vue";
 import Input from "../components/ui/Input.vue";
@@ -702,7 +398,7 @@ import {
   removeNoteMetadata,
   setNoteMetadata,
 } from "../utils/noteMetadata";
-import type { EditorMode, NoteHistoryEntry, ToastEditorHandle } from "../types";
+import type { NoteHistoryEntry, NoteEditorHandle } from "../types";
 
 const props = defineProps<{ title?: string }>();
 
@@ -715,10 +411,10 @@ const canModify = computed(() => true);
 let contentChangedTimeout: number | null = null;
 let autoSaveInProgress = false;
 let autoSaveQueued = false;
+// Last-known persisted HTML. Tiptap re-normalizes on load, so comparing against
+// `note.value.content` flaps; compare against this baseline instead.
+let baselineHtml = "";
 const editMode = ref(false);
-const editorMode = ref<EditorMode>(loadDefaultEditorMode());
-const isMarkdownPreview = ref(false);
-const markdownPreviewContent = ref("");
 const editorCharacterCount = ref(0);
 const historyEntries = ref<NoteHistoryEntry[]>([]);
 const globalStore = useGlobalStore();
@@ -764,17 +460,13 @@ const router = useRouter();
 const newTitle = ref(defaultNoteTitle);
 const titleInput = ref("");
 const toast = useToast();
-const toastEditor = ref<ToastEditorHandle | null>(null);
+const toastEditor = ref<NoteEditorHandle | null>(null);
 const unsavedChanges = ref(false);
 const workspaceElement = ref<HTMLElement | null>(null);
 const editorStyle = computed(() => ({
   "--note-paper-color": paperColors[paperStyle.value] || paperColors.plain,
   "--note-paper-shadow-alpha": `${paperTexture.value / 900}`,
   "--note-page-margin": `${pageMargin.value}px`,
-}));
-const pageMarginStyle = computed(() => ({
-  paddingLeft: `${pageMargin.value}px`,
-  paddingRight: `${pageMargin.value}px`,
 }));
 const contextPosition = ref({ x: 16, y: 16 });
 const selectedText = ref("");
@@ -878,12 +570,12 @@ function init() {
     return;
   }
   const currentContent =
-    toastEditor.value?.getMarkdown() ?? note.value.content;
+    toastEditor.value?.getHTML() ?? note.value.content;
   if (
     !props.title &&
     isUntitledNoteTitle(note.value.title) &&
     editMode.value &&
-    !currentContent
+    isEmptyHtml(currentContent)
   ) {
     router.replace({ name: "note", params: { title: note.value.title } });
     return;
@@ -939,7 +631,7 @@ function openDefaultNote() {
 
   getNote(defaultNoteTitle)
     .then((data) => {
-      if (data.content) {
+      if (!isEmptyHtml(data.content)) {
         createUntitledNote();
       } else {
         open(data);
@@ -956,22 +648,6 @@ function openDefaultNote() {
 
 function runEditorCommand(command: string) {
   if (editMode.value) toastEditor.value?.exec(command);
-}
-
-function changeEditorMode(mode: string) {
-  if (mode !== "markdown" && mode !== "wysiwyg") return;
-  if (!editMode.value || !toastEditor.value) return;
-  isMarkdownPreview.value = false;
-  toastEditor.value.changeMode(mode);
-  editorMode.value = mode;
-}
-
-function setMarkdownPreview(preview: boolean) {
-  if (!editMode.value || editorMode.value !== "markdown") return;
-  if (preview) {
-    markdownPreviewContent.value = toastEditor.value?.getMarkdown() || "";
-  }
-  isMarkdownPreview.value = preview;
 }
 
 async function toggleFullscreen() {
@@ -1000,20 +676,28 @@ function setEditMode() {
     draft?.content || note.value.content,
   );
   unsavedChanges.value = false;
-  editorMode.value = loadDefaultEditorMode();
-  isMarkdownPreview.value = false;
   editMode.value = true;
+  nextTick(captureBaseline);
 }
 
 function getInitialEditorValue() {
-  return loadDraft()?.content || note.value.content;
+  const value = loadDraft()?.content || note.value.content;
+  return isEmptyHtml(value) ? "" : value;
 }
 
 function editorChanged() {
   editorCharacterCount.value = countCharacters(
-    toastEditor.value?.getMarkdown() || "",
+    toastEditor.value?.getHTML() || "",
   );
   startContentChangedTimeout();
+}
+
+function focusEditor() {
+  toastEditor.value?.focus();
+}
+
+function captureBaseline() {
+  baselineHtml = toastEditor.value?.getHTML() || "";
 }
 
 // The canonical new-note filename is a storage fallback, not visible title text.
@@ -1147,7 +831,7 @@ async function handleEditorContextAction(action: string) {
       const selection = window.getSelection();
       const range = document.createRange();
       const content = workspaceElement.value?.querySelector(
-        ".toastui-editor-contents",
+        ".mionote-rich-text .tiptap",
       );
       if (content) {
         range.selectNodeContents(content);
@@ -1206,8 +890,7 @@ function saveTitle() {
 }
 
 function noteExportData() {
-  const markdown = toastEditor.value?.getMarkdown() || note.value.content || "";
-  const html = toastEditor.value?.getHTML() || markdownToExportHtml(markdown);
+  const html = toastEditor.value?.getHTML() || note.value.content || "";
   const parser = document.createElement("div");
   parser.innerHTML = html;
   return {
@@ -1216,7 +899,6 @@ function noteExportData() {
       (isUntitledNoteTitle(note.value.title)
         ? defaultNoteTitle
         : note.value.title || "MioNote"),
-    markdown,
     html,
     text: parser.innerText.trim(),
   };
@@ -1235,16 +917,6 @@ function downloadBlob(blob, filename) {
 
 function exportFilename(title) {
   return title.replace(reservedFilenameCharacters, "_").trim() || "MioNote";
-}
-
-function markdownToExportHtml(markdown) {
-  return markdown
-    .split(/\n{2,}/)
-    .map(
-      (paragraph) =>
-        `<p>${escapeExportHtml(paragraph).replace(/\n/g, "<br>")}</p>`,
-    )
-    .join("");
 }
 
 function escapeExportHtml(value) {
@@ -1384,7 +1056,7 @@ function openHistory() {
 function restoreHistory(entry) {
   const apply = () => {
     newTitle.value = editableTitleForStorageTitle(entry.title);
-    toastEditor.value?.setMarkdown(entry.content);
+    toastEditor.value?.setHTML(entry.content);
     editorCharacterCount.value = countCharacters(entry.content);
     startContentChangedTimeout();
   };
@@ -1427,9 +1099,13 @@ function findInNote({
     current: activeFindIndex + 1,
     total: match.matches.length,
   };
-  toastEditor.value?.highlightMatches(query, caseSensitive);
+  toastEditor.value?.highlightMatches(
+    query,
+    caseSensitive,
+    match.matches[activeFindIndex],
+  );
   if (focusEditor) {
-    selectFindMatch(query, caseSensitive, match.matches[activeFindIndex]);
+    selectFindMatch(match.matches[activeFindIndex], query.length);
   }
 }
 
@@ -1445,10 +1121,11 @@ function replaceInNote(
   { query, replacement, caseSensitive },
   replaceEveryMatch,
 ) {
-  if (isLocked.value || !toastEditor.value || !query) return;
+  const editor = toastEditor.value;
+  if (isLocked.value || !editor || !query) return;
 
-  const content = toastEditor.value.getMarkdown();
-  const source = caseSensitive ? content : content.toLocaleLowerCase();
+  const text = editor.getVisibleText() || "";
+  const source = caseSensitive ? text : text.toLocaleLowerCase();
   const needle = caseSensitive ? query : query.toLocaleLowerCase();
   const matches = findMatchOffsets(source, needle);
   if (!matches.length) {
@@ -1457,29 +1134,21 @@ function replaceInNote(
   }
 
   const findKey = `${caseSensitive}:${query}`;
-  const replacementIndex = replaceEveryMatch
-    ? -1
-    : activeFindKey === findKey && activeFindIndex >= 0
-      ? activeFindIndex
-      : 0;
-  let result = content;
-  if (replaceEveryMatch) {
-    for (let index = matches.length - 1; index >= 0; index -= 1) {
-      const offset = matches[index];
-      result =
-        result.slice(0, offset) +
-        replacement +
-        result.slice(offset + query.length);
-    }
-  } else {
-    const offset = matches[replacementIndex];
-    result =
-      result.slice(0, offset) +
-      replacement +
-      result.slice(offset + query.length);
+  const targetIndex =
+    activeFindKey === findKey && activeFindIndex >= 0 ? activeFindIndex : 0;
+  const targets = replaceEveryMatch
+    ? matches.slice()
+    : [matches[targetIndex]];
+
+  // Replace from the end so earlier offsets stay valid as the doc mutates.
+  for (let index = targets.length - 1; index >= 0; index -= 1) {
+    const offset = targets[index];
+    if (offset == null) continue;
+    editor.selectRange(offset, offset + query.length);
+    editor.replaceSelection(replacement);
   }
-  toastEditor.value.setMarkdown(result);
-  editorCharacterCount.value = countCharacters(result);
+
+  editorCharacterCount.value = countCharacters(editor.getHTML() || "");
   activeFindKey = "";
   activeFindIndex = -1;
   findInNote({ query, caseSensitive, reset: true });
@@ -1488,7 +1157,7 @@ function replaceInNote(
 
 function getFindMatch(query, caseSensitive, backwards, reset) {
   if (!query) return null;
-  const content = toastEditor.value?.getMarkdown() || note.value.content || "";
+  const content = toastEditor.value?.getVisibleText() || "";
   const source = caseSensitive ? content : content.toLocaleLowerCase();
   const needle = caseSensitive ? query : query.toLocaleLowerCase();
   const matches = findMatchOffsets(source, needle);
@@ -1516,27 +1185,12 @@ function findMatchOffsets(source, needle) {
   return matches;
 }
 
-function selectFindMatch(query, caseSensitive, markdownOffset) {
+function selectFindMatch(offset, length) {
   const editor = toastEditor.value;
   if (!editor || !editMode.value) return;
-
-  const visibleText = editor.getVisibleText() || "";
-  const source = caseSensitive ? visibleText : visibleText.toLocaleLowerCase();
-  const needle = caseSensitive ? query : query.toLocaleLowerCase();
-  const occurrence = findMatchOffsets(
-    caseSensitive
-      ? editor.getMarkdown() || ""
-      : (editor.getMarkdown() || "").toLocaleLowerCase(),
-    needle,
-  ).findIndex((offset) => offset === markdownOffset);
-  const visibleOffsets = findMatchOffsets(source, needle);
-  const visibleOffset =
-    visibleOffsets[Math.max(0, occurrence)] ?? visibleOffsets[0];
-  if (visibleOffset == null) return;
-
   // Select through the ProseMirror state so the selection survives editor
-  // redraws; both mode containers share the same rendered-text mapping.
-  editor.selectRange(visibleOffset, visibleOffset + query.length);
+  // redraws; find offsets are visible-text offsets mapped by the editor.
+  editor.selectRange(offset, offset + length);
 }
 
 // Note Deletion
@@ -1567,7 +1221,8 @@ function saveHandler(closeAction: CloseAction | null = null) {
     return;
   }
 
-  const newContent = toastEditor.value.getMarkdown();
+  if (!toastEditor.value) return;
+  const newContent = toastEditor.value.getHTML();
   if (isNewNote.value) {
     saveNew(title, newContent, closeAction);
   } else {
@@ -1580,6 +1235,7 @@ function saveNew(newTitle, newContent, closeAction: CloseAction | null = null) {
     .then((data) => {
       clearDraft();
       note.value = data;
+      baselineHtml = data.content;
       recordHistory(data);
       notifyNotesChanged();
       router
@@ -1602,7 +1258,7 @@ function saveExisting(
   closeAction: CloseAction | null = null,
 ) {
   // Return if no changes
-  if (newTitle == note.value.title && newContent == note.value.content) {
+  if (newTitle == note.value.title && newContent == baselineHtml) {
     noteSaveSuccess(closeAction);
     return;
   }
@@ -1611,6 +1267,7 @@ function saveExisting(
     .then((data) => {
       clearDraft();
       note.value = data;
+      baselineHtml = data.content;
       recordHistory(data);
       notifyNotesChanged();
       router.replace({ name: "note", params: { title: note.value.title } });
@@ -1646,8 +1303,8 @@ function autoSaveHandler() {
     return;
   }
   const title = persistedTitle();
-  const content = toastEditor.value.getMarkdown();
-  if (title === note.value.title && content === note.value.content) return;
+  const content = toastEditor.value.getHTML();
+  if (title === note.value.title && content === baselineHtml) return;
   const isCreating = !note.value.title;
   const previousTitle = note.value.title;
   const draftKey = draftStorageKey();
@@ -1660,6 +1317,7 @@ function autoSaveHandler() {
   request
     .then((data) => {
       note.value = data;
+      baselineHtml = data.content;
       recordHistory(data);
       notifyNotesChanged();
       if (isCreating || previousTitle !== data.title) {
@@ -1668,7 +1326,7 @@ function autoSaveHandler() {
 
       if (
         persistedTitle() === data.title &&
-        toastEditor.value?.getMarkdown() === data.content
+        toastEditor.value?.getHTML() === data.content
       ) {
         unsavedChanges.value = false;
         setBeforeUnloadConfirmation(false);
@@ -1700,7 +1358,7 @@ function duplicateNoteToast(error) {
   const isEmptyUntitledConflict =
     detail === "Cannot create a second untitled empty note." ||
     (!newTitle.value.trim() &&
-      !(toastEditor.value?.getMarkdown() || "").trim());
+      isEmptyHtml(toastEditor.value?.getHTML() || ""));
   const message =
     isEmptyUntitledConflict
       ? t("note.emptyUntitledDuplicate")
@@ -1749,18 +1407,13 @@ function addImageBlobHook(
   file: File,
   callback: (url: string, altText?: string) => void,
 ) {
-  const altTextInputValue = (
-    document.getElementById("toastuiAltTextInput") as HTMLInputElement | null
-  )?.value;
-
   // Upload the image then use the callback to insert the URL into the editor
   const request = postAttachment(file);
   if (!request) return Promise.reject(new Error("Invalid attachment"));
   return request.then(function (data) {
     if (!data) throw new Error("Attachment upload failed");
-    // If the user has entered an alt text, use it. Otherwise, use the filename returned by the API.
-    const altText = altTextInputValue ? altTextInputValue : data.filename;
-    callback(data.url, altText);
+    // Use the filename returned by the API as the alt text.
+    callback(data.url, data.filename);
     return data;
   });
 }
@@ -1830,13 +1483,27 @@ function contentChangedHandler() {
   }
 }
 
+function isEmptyHtml(html: unknown) {
+  return (
+    String(html ?? "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, "")
+      .trim() === ""
+  );
+}
+
 function countCharacters(content: unknown) {
-  return String(content ?? "").replace(/\s/g, "").length;
+  // Content is stored as HTML; count visible characters only.
+  return String(content ?? "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, "")
+    .replace(/\s/g, "").length;
 }
 
 // Drafts
 function saveDraft() {
-  const content = toastEditor.value.getMarkdown();
+  if (!toastEditor.value) return;
+  const content = toastEditor.value.getHTML();
   const userHasPersistedToken = isCurrentTokenStored();
   const draft = JSON.stringify({ title: newTitle.value || "", content });
   if (content || newTitle.value) {
@@ -1929,15 +1596,9 @@ function notifyNotesChanged() {
   window.dispatchEvent(new Event("mionote:notes-changed"));
 }
 
-function loadDefaultEditorMode(): EditorMode {
-  return localStorage.getItem("defaultEditorMode") === "markdown"
-    ? "markdown"
-    : "wysiwyg";
-}
-
 function isContentChanged() {
   return (
-    (toastEditor.value?.getMarkdown() || "") != note.value.content ||
+    (toastEditor.value?.getHTML() || "") != baselineHtml ||
     persistedTitle() != note.value.title
   );
 }
